@@ -1,0 +1,84 @@
+name: Build Apollo Agent
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: apollo-agent.exe
+          - os: ubuntu-latest
+            artifact: apollo-agent
+          - os: macos-latest
+            artifact: apollo-agent-macos
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust module (maturin)
+        run: |
+          pip install maturin
+          cd apollo_io_native
+          maturin build --release
+        shell: bash
+
+      - name: Install Rust wheel
+        run: pip install apollo_io_native/target/wheels/*.whl
+        shell: bash
+
+      - name: Install Python dependencies
+        run: pip install -r agent/requirements.txt
+        shell: bash
+
+      - name: Build with Nuitka
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: agent/main.py
+          mode: onefile
+          output-filename: ${{ matrix.artifact }}
+          include-package: agent
+          include-data-dir: |
+            agent/ui/static=agent/ui/static
+            agent/config=agent/config
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apollo-agent-${{ matrix.os }}
+          path: build/${{ matrix.artifact }}
+          retention-days: 90
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            apollo-agent-windows-latest/apollo-agent.exe
+            apollo-agent-ubuntu-latest/apollo-agent
+            apollo-agent-macos-latest/apollo-agent-macos
+          generate_release_notes: true

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://apollo-cloud-api-production.up.railway.app">
+    <title>Apollo Data Auditor - Agent Cloud V1.7.R</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Agent Cloud specific styles */
+        .cloud-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+            font-weight: 600;
+        }
+        .hub-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .hub-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .hub-link a:hover {
+            text-decoration: underline;
+        }
+        .scoring-placeholder {
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+        .pii-count {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .success-indicator {
+            color: #28a745;
+        }
+        .error-indicator {
+            color: #dc3545;
+        }
+        /* Language Toggle - Sprint 57 */
+        .lang-toggle {
+            display: flex;
+            gap: 0.25rem;
+            margin-left: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 2px;
+        }
+        .lang-toggle button {
+            padding: 4px 10px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .lang-toggle button:hover {
+            color: #ffffff;
+        }
+        .lang-toggle button.active {
+            background: rgba(255,255,255,0.2);
+            color: #ffffff;
+        }
+        /* Tab Navigation - Sprint 87 */
+        .tab-nav {
+            display: flex;
+            gap: 0;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .tab-nav button {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: var(--gray-500);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-nav button:hover {
+            color: var(--auditor-primary);
+            background: rgba(102, 126, 234, 0.05);
+        }
+        .tab-nav button.active {
+            color: var(--auditor-primary);
+            border-bottom-color: var(--auditor-primary);
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: flex;
+            gap: var(--space-6);
+        }
+        /* Directory tab: single column, centered, max-width */
+        .tab-panel-directory.active {
+            display: block;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .tab-panel-directory .audit-column {
+            flex: none;
+            width: 100%;
+        }
+        /* App tab: single column, centered, max-width */
+        .tab-panel-app.active {
+            display: block;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .tab-panel-app .audit-column {
+            flex: none;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Header - Apollo Style -->
+    <nav class="apollo-nav">
+        <div class="container">
+            <div class="nav-brand">
+                <div class="brand-logo">
+                    <img src="/static/assets/aiia-logo.png" alt="AIIA" class="logo-img">
+                </div>
+            </div>
+            <div class="nav-text">
+                <span class="brand-text">www.aiia-tech.com</span>
+                <span class="cloud-badge">CLOUD MODE</span>
+                <button class="logout-btn" onclick="logout()" title="Deconnexion">
+                    Deconnexion
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <header style="position: relative;">
+        <!-- Language Toggle - Sprint 57 (top right) -->
+        <div class="lang-toggle" style="position: absolute; top: 10px; right: 20px;">
+            <button class="active">FR</button>
+            <button onclick="window.location.href='/static/en/index.html'">EN</button>
+        </div>
+        <h1>APOLLO<sup>&trade;</sup> DATA AUDITOR - Agent Cloud V1.7.R</h1>
+        <p class="subtitle">Scan FILES &amp; DATABASES - Send to Hub for Scoring</p>
+    </header>
+
+    <!-- Tab Navigation - Sprint 87 -->
+    <nav class="tab-nav" id="main-tabs">
+        <button class="active" onclick="switchTab('data-audit')" id="tab-btn-data-audit">
+            <i data-lucide="hard-drive" style="width: 16px; height: 16px;"></i>
+            Data Audit
+        </button>
+        <button onclick="switchTab('directory')" id="tab-btn-directory">
+            <i data-lucide="shield" style="width: 16px; height: 16px;"></i>
+            Directory
+        </button>
+        <button onclick="switchTab('app')" id="tab-btn-app">
+            <i data-lucide="building-2" style="width: 16px; height: 16px;"></i>
+            ERP / Compta
+        </button>
+    </nav>
+
+    <!-- TAB PANEL: Data Audit (FILES + DATABASES + CLOUD) -->
+    <main class="container tab-panel active" id="panel-data-audit">
+        <!-- FILES COLUMN -->
+        <section class="audit-column" id="files-column">
+            <h2>FILES</h2>
+
+            <!-- Auto-Discover -->
+            <button class="discover-btn" id="files-discover-btn" onclick="discoverFiles()">
+                Auto-Discover
+            </button>
+
+            <!-- Discovered Sources (checkboxes) -->
+            <div class="discovered-section" id="files-discovered" style="display:none;">
+                <h3>Sources Found</h3>
+                <ul id="files-discovered-list" class="discovered-list"></ul>
+            </div>
+
+            <!-- Manual Add -->
+            <div class="sources-section">
+                <h3>Manual Add</h3>
+                <div class="add-source">
+                    <input type="text" id="files-path-input" placeholder="/path/to/folder" />
+                    <button onclick="addFilesSource()">+ Add</button>
+                </div>
+                <ul id="files-sources-list" class="sources-list"></ul>
+            </div>
+
+            <!-- Start Button -->
+            <button class="start-btn" id="files-start-btn" onclick="startFilesAudit()">
+                Start Files Audit
+            </button>
+
+            <!-- Export Button -->
+            <button class="export-btn" id="files-export-btn" onclick="exportFilesReport()" style="display:none;">
+                Export Files JSON
+            </button>
+
+            <!-- Stats -->
+            <div class="stats-section" id="files-stats">
+                <h3>Stats</h3>
+                <div class="stat-row">
+                    <span>Fichiers d&eacute;couverts:</span>
+                    <span id="files-discovered-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Fichiers analys&eacute;s:</span>
+                    <span id="files-analyzed-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>PII d&eacute;tect&eacute;s:</span>
+                    <span id="files-pii-count" class="pii-count">-</span>
+                </div>
+            </div>
+
+            <!-- Progress (Apollo ROI style) -->
+            <div class="progress-section" id="files-progress" style="display:none;">
+                <div class="progress-status" id="files-progress-status" style="text-align: center; padding: 20px;">
+                    <div style="margin-bottom: 12px;">
+                        <i data-lucide="scan" style="width: 32px; height: 32px; color: var(--auditor-primary);"></i>
+                    </div>
+                    <div style="font-weight: 600; color: var(--auditor-primary); font-size: 1rem;">
+                        Scan in progress...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scoring Placeholder (Cloud Mode) -->
+            <div class="scoring-placeholder" id="files-scoring-placeholder" style="display:none;">
+                <p>Scores calcul&eacute;s sur le Hub</p>
+                <a href="https://apollo-cloud-api-production.up.railway.app/dashboard/dashboard.html"
+                   target="_blank"
+                   style="color: #667eea;">
+                    Voir Dashboard Hub &rarr;
+                </a>
+            </div>
+        </section>
+
+        <!-- DATABASES COLUMN -->
+        <section class="audit-column" id="databases-column">
+            <h2>DATABASES</h2>
+
+            <!-- Auto-Discover -->
+            <button class="discover-btn" id="db-discover-btn" onclick="discoverDatabases()">
+                Auto-Discover
+            </button>
+
+            <!-- Discovered Sources (checkboxes with credentials) -->
+            <div class="discovered-section" id="db-discovered" style="display:none;">
+                <h3>Sources Found</h3>
+                <ul id="db-discovered-list" class="discovered-list"></ul>
+            </div>
+
+            <!-- Manual Add -->
+            <div class="sources-section">
+                <h3>Manual Add</h3>
+                <div class="add-source">
+                    <select id="db-type-select">
+                        <option value="postgresql">PostgreSQL</option>
+                        <option value="mysql">MySQL</option>
+                        <option value="mongodb">MongoDB</option>
+                        <option value="sqlserver">SQL Server</option>
+                    </select>
+                    <input type="text" id="db-host-input" placeholder="localhost:5432" />
+                    <input type="text" id="db-name-input" placeholder="database_name" />
+                    <input type="text" id="db-user-input" placeholder="username" />
+                    <input type="password" id="db-pass-input" placeholder="password" />
+                    <button onclick="addDbSource()">+ Add</button>
+                </div>
+                <ul id="db-sources-list" class="sources-list"></ul>
+            </div>
+
+            <!-- Start Button -->
+            <button class="start-btn" id="db-start-btn" onclick="startDbAudit()">
+                Start DB Audit
+            </button>
+
+            <!-- Export Button -->
+            <button class="export-btn" id="db-export-btn" onclick="exportDbReport()" style="display:none;">
+                Export DB JSON
+            </button>
+
+            <!-- Stats -->
+            <div class="stats-section" id="db-stats">
+                <h3>Stats</h3>
+                <div class="stat-row">
+                    <span>Tables d&eacute;couvertes:</span>
+                    <span id="db-tables-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Tables analys&eacute;es:</span>
+                    <span id="db-analyzed-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>PII d&eacute;tect&eacute;s:</span>
+                    <span id="db-pii-count" class="pii-count">-</span>
+                </div>
+            </div>
+
+            <!-- Progress (Apollo ROI style) -->
+            <div class="progress-section" id="db-progress" style="display:none;">
+                <div class="progress-status" id="db-progress-status" style="text-align: center; padding: 20px;">
+                    <div style="margin-bottom: 12px;">
+                        <i data-lucide="database" style="width: 32px; height: 32px; color: var(--auditor-primary);"></i>
+                    </div>
+                    <div style="font-weight: 600; color: var(--auditor-primary); font-size: 1rem;">
+                        Scan in progress...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scoring Placeholder (Cloud Mode) -->
+            <div class="scoring-placeholder" id="db-scoring-placeholder" style="display:none;">
+                <p>Scores calcul&eacute;s sur le Hub</p>
+                <a href="https://apollo-cloud-api-production.up.railway.app/dashboard/dashboard.html"
+                   target="_blank"
+                   style="color: #667eea;">
+                    Voir Dashboard Hub &rarr;
+                </a>
+            </div>
+        </section>
+
+        <!-- CLOUD COLUMN (Sprint 35) -->
+        <section class="audit-column" id="cloud-column">
+            <h2>CLOUD <span class="cloud-badge" style="font-size: 10px;">OneDrive</span></h2>
+
+            <!-- Azure AD Credentials -->
+            <div class="sources-section">
+                <h3>Azure AD Credentials</h3>
+                <div class="credentials-form">
+                    <input type="text" id="cloud-tenant-id" placeholder="Tenant ID" />
+                    <input type="text" id="cloud-client-id" placeholder="Client ID (App ID)" />
+                    <input type="password" id="cloud-client-secret" placeholder="Client Secret" />
+                </div>
+            </div>
+
+            <!-- Drive Selection -->
+            <div class="sources-section">
+                <h3>Drive Settings</h3>
+                <div class="drive-settings">
+                    <select id="cloud-drive-select">
+                        <option value="all">Scan All Drives (click List Drives first)</option>
+                    </select>
+                    <input type="text" id="cloud-path-input" placeholder="/ (root folder)" value="/" />
+                </div>
+                <button class="discover-btn" id="cloud-list-drives-btn" onclick="listCloudDrives()" style="margin-top: 10px;">
+                    List Drives
+                </button>
+            </div>
+
+            <!-- Start Button -->
+            <button class="start-btn" id="cloud-start-btn" onclick="startCloudAudit()">
+                Start Cloud Audit
+            </button>
+
+            <!-- Export Button -->
+            <button class="export-btn" id="cloud-export-btn" onclick="exportCloudReport()" style="display:none;">
+                Export Cloud JSON
+            </button>
+
+            <!-- Stats -->
+            <div class="stats-section" id="cloud-stats">
+                <h3>Stats</h3>
+                <div class="stat-row">
+                    <span>Fichiers cloud:</span>
+                    <span id="cloud-files-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Taille totale:</span>
+                    <span id="cloud-size-total">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Fichiers partag&eacute;s:</span>
+                    <span id="cloud-shared-count" style="color: #ffc107;">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>PII d&eacute;tect&eacute;s:</span>
+                    <span id="cloud-pii-count" class="pii-count">-</span>
+                </div>
+            </div>
+
+            <!-- Progress (Apollo ROI style) -->
+            <div class="progress-section" id="cloud-progress" style="display:none;">
+                <div class="progress-status" id="cloud-progress-status" style="text-align: center; padding: 20px;">
+                    <div style="margin-bottom: 12px;">
+                        <i data-lucide="cloud" style="width: 32px; height: 32px; color: var(--auditor-primary);"></i>
+                    </div>
+                    <div style="font-weight: 600; color: var(--auditor-primary); font-size: 1rem;">
+                        Scan in progress...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scoring Placeholder (Cloud Mode) -->
+            <div class="scoring-placeholder" id="cloud-scoring-placeholder" style="display:none;">
+                <p>Scores calcul&eacute;s sur le Hub</p>
+                <a href="https://apollo-cloud-api-production.up.railway.app/dashboard/dashboard.html"
+                   target="_blank"
+                   style="color: #667eea;">
+                    Voir Dashboard Hub &rarr;
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- TAB PANEL: Directory (LDAP/AD) - Sprint 87 -->
+    <div class="tab-panel tab-panel-directory" id="panel-directory" style="padding: var(--space-6);">
+        <section class="audit-column" id="directory-column">
+            <h2>DIRECTORY <span class="cloud-badge" style="font-size: 10px;">LDAP/AD</span></h2>
+
+            <!-- LDAP Connection Settings -->
+            <div class="sources-section">
+                <h3>LDAP / Active Directory</h3>
+                <div class="credentials-form">
+                    <input type="text" id="dir-host" placeholder="ldap.example.com" />
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" id="dir-port" placeholder="Port" style="width: 80px;" />
+                        <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: #6c757d;">
+                            <input type="checkbox" id="dir-use-ssl" /> SSL
+                        </label>
+                    </div>
+                    <input type="text" id="dir-bind-dn" placeholder="cn=admin,dc=example,dc=com" />
+                    <input type="password" id="dir-bind-password" placeholder="Bind Password" />
+                    <input type="text" id="dir-base-dn" placeholder="dc=example,dc=com" />
+                </div>
+            </div>
+
+            <!-- Test Connection -->
+            <button class="discover-btn" id="dir-test-btn" onclick="testDirectoryConnection()" style="margin-top: 10px;">
+                Test Connection
+            </button>
+
+            <!-- Start Button -->
+            <button class="start-btn" id="dir-start-btn" onclick="startDirectoryAudit()">
+                Start Directory Audit
+            </button>
+
+            <!-- Export Button -->
+            <button class="export-btn" id="dir-export-btn" onclick="exportDirectoryReport()" style="display:none;">
+                Export Directory JSON
+            </button>
+
+            <!-- Stats -->
+            <div class="stats-section" id="dir-stats">
+                <h3>Stats</h3>
+                <div class="stat-row">
+                    <span>Utilisateurs:</span>
+                    <span id="dir-users-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>D&eacute;sactiv&eacute;s:</span>
+                    <span id="dir-disabled-count" style="color: #ffc107;">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Dormants (90j):</span>
+                    <span id="dir-dormant-count" style="color: #ffc107;">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Comptes service:</span>
+                    <span id="dir-service-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Groupes:</span>
+                    <span id="dir-groups-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Administrateurs:</span>
+                    <span id="dir-admins-count" class="pii-count">-</span>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-section" id="dir-progress" style="display:none;">
+                <div class="progress-status" id="dir-progress-status" style="text-align: center; padding: 20px;">
+                    <div style="margin-bottom: 12px;">
+                        <i data-lucide="shield" style="width: 32px; height: 32px; color: var(--auditor-primary);"></i>
+                    </div>
+                    <div style="font-weight: 600; color: var(--auditor-primary); font-size: 1rem;">
+                        Scan in progress...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scoring Placeholder -->
+            <div class="scoring-placeholder" id="dir-scoring-placeholder" style="display:none;">
+                <p>Scores calcul&eacute;s sur le Hub</p>
+                <a href="https://apollo-cloud-api-production.up.railway.app/dashboard/dashboard.html"
+                   target="_blank"
+                   style="color: #667eea;">
+                    Voir Dashboard Hub &rarr;
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- TAB PANEL: App Audit (ERP/CRM/SaaS) — Sprint 89 -->
+    <div class="tab-panel tab-panel-app" id="panel-app" style="padding: var(--space-6);">
+        <section class="audit-column" id="app-column">
+            <h2>ERP / COMPTA <span class="cloud-badge" style="font-size: 10px;">API</span></h2>
+
+            <!-- App Connection Settings -->
+            <div class="sources-section">
+                <h3>Connecteur Application</h3>
+                <div class="credentials-form">
+                    <select id="app-type" style="padding: 8px; border: 1px solid #333; background: #1a1a2e; color: #e0e0e0; border-radius: 4px;">
+                        <option value="pennylane">Pennylane</option>
+                    </select>
+                    <input type="password" id="app-api-token" placeholder="API Token (Bearer)" />
+                    <input type="text" id="app-api-url" placeholder="URL API (laisser vide = d&eacute;faut)" />
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: #6c757d;">
+                        <input type="checkbox" id="app-use-2026-api" checked /> use_2026_api_changes
+                    </label>
+                </div>
+            </div>
+
+            <!-- Test Connection -->
+            <button class="discover-btn" id="app-test-btn" onclick="testAppConnection()" style="margin-top: 10px;">
+                Test Connection
+            </button>
+
+            <!-- Start Button -->
+            <button class="start-btn" id="app-start-btn" onclick="startAppAudit()">
+                Start App Audit
+            </button>
+
+            <!-- Export Button -->
+            <button class="export-btn" id="app-export-btn" onclick="exportAppReport()" style="display:none;">
+                Export App JSON
+            </button>
+
+            <!-- Stats -->
+            <div class="stats-section" id="app-stats">
+                <h3>Stats</h3>
+                <div class="stat-row">
+                    <span>Entit&eacute;s scann&eacute;es:</span>
+                    <span id="app-entities-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Enregistrements:</span>
+                    <span id="app-records-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Donn&eacute;es PII d&eacute;tect&eacute;es:</span>
+                    <span id="app-pii-count" class="pii-count">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Entit&eacute; risque max:</span>
+                    <span id="app-risk-entity" style="color: #ffc107;">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>IBAN expos&eacute;s:</span>
+                    <span id="app-iban-count" style="color: #dc3545;">-</span>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-section" id="app-progress" style="display:none;">
+                <div class="progress-status" id="app-progress-status" style="text-align: center; padding: 20px;">
+                    <div style="margin-bottom: 12px;">
+                        <i data-lucide="building-2" style="width: 32px; height: 32px; color: var(--auditor-primary);"></i>
+                    </div>
+                    <div style="font-weight: 600; color: var(--auditor-primary); font-size: 1rem;">
+                        Scan in progress...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scoring Placeholder -->
+            <div class="scoring-placeholder" id="app-scoring-placeholder" style="display:none;">
+                <p>Scores calcul&eacute;s sur le Hub</p>
+                <a href="https://apollo-cloud-api-production.up.railway.app/dashboard/dashboard.html"
+                   target="_blank"
+                   style="color: #667eea;">
+                    Voir Dashboard Hub &rarr;
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- STOP & RESET Buttons Section -->
+    <section class="hub-link" id="hub-link-section" style="padding: 15px 0;">
+        <div class="action-buttons-row" style="display: flex; justify-content: center; gap: 15px;">
+            <button class="danger-btn" id="stop-scan-btn" onclick="stopScan()" style="display: none;">
+                Stop Scan
+            </button>
+            <button class="danger-btn" id="reset-dashboard-btn" onclick="resetDashboard()">
+                Reset Dashboard
+            </button>
+        </div>
+    </section>
+
+    <!-- Status Messages -->
+    <section class="status-messages" id="status-messages" style="display:none; padding: 20px; text-align: center;">
+        <div id="status-content"></div>
+    </section>
+
+    <!-- Footer with connection indicator -->
+    <footer class="footer-minimal" style="background: #1e1e2e; color: #9ca3af; padding: 0.75rem 0;">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; padding: 0 1rem;">
+            <p style="margin: 0;">&copy; 2025 aiia-tech.com | APOLLO&trade; DATA AUDITOR - Agent Cloud V1.7.R</p>
+            <p id="hub-connection-status" style="margin: 0; font-size: 0.9rem;">
+                <span id="hub-dot" style="color: #6b7280;">○</span>
+                Connecté: <strong id="hub-client-name" style="color: #d1d5db;">...</strong>
+                <span style="color: #4b5563; margin: 0 0.5rem;">|</span>
+                Hub: <span id="hub-status-text" style="color: #6b7280;">...</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Lucide Icons -->
+    <script src="/static/js/lucide.min.js"></script>
+    <script src="/static/auth.js?v=94c"></script>
+    <script src="/static/api.js"></script>
+    <script src="/static/app.js?v=94c"></script>
+    <script>
+        // Require authentication on load
+        AUTH.requireAuth();
+
+        // Logout function
+        function logout() {
+            AUTH.clearApiKey();
+            window.location.href = '/static/login.html';
+        }
+
+        // Initialize Lucide icons after DOM load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

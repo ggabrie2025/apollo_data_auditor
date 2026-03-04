@@ -1,0 +1,19 @@
+# Apollo Agent V1.6 - Dependencies
+
+PyYAML>=6.0
+
+# Async Database Drivers (Agent V1.4+)
+asyncpg>=0.29.0       # PostgreSQL
+aiomysql>=0.2.0       # MySQL
+motor>=3.3.2          # MongoDB
+aioodbc>=0.5.0        # SQL Server (Sprint 30)
+
+# Cloud Connectors (Sprint 35)
+msal>=1.24.0          # Microsoft Graph OAuth
+aiohttp>=3.9.0        # Async HTTP client
+
+# Optimization (Sprint 37 - V1.6.1)
+pybloom_live>=3.0.0   # Bloom filter for O(1) dedup
+
+# Cloud PII Content Extraction (Sprint 85)
+openpyxl>=3.1.0       # XLSX cell text extraction for cloud PII scan

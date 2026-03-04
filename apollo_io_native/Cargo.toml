@@ -1,0 +1,67 @@
+[package]
+name = "apollo_io_native"
+version = "0.1.0"
+edition = "2021"
+description = "Native I/O and Fingerprint acceleration for Apollo Agent"
+license = "MIT"
+authors = ["Apollo Team"]
+
+[lib]
+name = "apollo_io_native"
+crate-type = ["cdylib"]
+
+[dependencies]
+# Python bindings (0.22+ supports Python 3.13)
+pyo3 = { version = "0.22", features = ["extension-module"] }
+
+# Async runtime
+tokio = { version = "1.35", features = ["rt-multi-thread", "fs", "io-util", "sync"] }
+
+# Filesystem
+walkdir = "2.4"
+
+# Concurrency
+parking_lot = "0.12"
+rayon = "1.8"
+
+# Hashing (xxhash - very fast)
+xxhash-rust = { version = "0.8", features = ["xxh64", "xxh32"] }
+
+# SHA256 for content/path hashing
+sha2 = "0.10"
+
+# Cross-platform byte order
+byteorder = "1.5"
+
+# Encoding detection (Mozilla - fast)
+encoding_rs = "0.8"
+
+# BloomFilter
+bloomfilter = "1.0"
+
+# Hex encoding for hash display
+hex = "0.4"
+
+# Error handling
+thiserror = "1.0"
+
+# Linux io_uring (optional, feature-gated)
+[target.'cfg(target_os = "linux")'.dependencies]
+tokio-uring = { version = "0.4", optional = true }
+
+[features]
+default = []
+io_uring = ["tokio-uring"]
+
+[dev-dependencies]
+tempfile = "3.10"
+
+[profile.release]
+strip = true          # Supprime symboles debug — binaire opaque
+lto = true            # Link-Time Optimization — inline tout
+codegen-units = 1     # Optimisation maximale, un seul bloc
+panic = "abort"       # Pas de stack unwinding lisible
+opt-level = "z"       # Optimise taille — code compact, plus dur a lire
+
+[profile.dev]
+opt-level = 1

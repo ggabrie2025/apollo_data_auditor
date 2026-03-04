@@ -1,0 +1,77 @@
+# Apollo Agent - OneDrive/SharePoint Configuration (Sprint 35)
+# (c) 2025 Gilles Gabriel - gilles.gabriel@noos.fr
+
+onedrive:
+  # Default maximum files to collect (10M for enterprise 24/40/80TB)
+  default_max_files: 10000000
+
+  # Maximum file size to include (MB)
+  max_file_size_mb: 100
+
+  # Scannable extensions (files that can be processed for PII)
+  scannable_extensions:
+    - .docx
+    - .xlsx
+    - .pdf
+    - .txt
+    - .csv
+    - .json
+    - .md
+    - .html
+    - .xml
+    - .doc
+    - .xls
+    - .pptx
+    - .ppt
+    - .odt
+    - .ods
+    - .rtf
+    - .yaml
+    - .yml
+    - .sql
+
+  # Excluded extensions (skip these files)
+  excluded_extensions:
+    - .exe
+    - .dll
+    - .sys
+    - .tmp
+    - .log
+    - .cache
+    - .db
+    - .sqlite
+    - .iso
+    - .dmg
+    - .pkg
+    - .msi
+    - .zip
+    - .tar
+    - .gz
+    - .rar
+    - .7z
+
+  # Excluded folder patterns (skip these folders)
+  excluded_folders:
+    - .git
+    - node_modules
+    - __pycache__
+    - .cache
+    - .tmp
+    - Recycle Bin
+    - $RECYCLE.BIN
+
+  # API rate limiting
+  rate_limit:
+    requests_per_second: 10
+    batch_size: 200
+
+  # Retry configuration
+  retry:
+    max_attempts: 3
+    backoff_seconds: 2
+
+sharepoint:
+  # SharePoint-specific settings
+  include_document_libraries: true
+  include_site_pages: false
+  max_sites: 50

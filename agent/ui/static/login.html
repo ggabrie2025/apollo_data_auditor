@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://apollo-cloud-api-production.up.railway.app">
+  <title>Apollo Data Auditor - Login</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--auditor-primary) 0%, var(--auditor-secondary) 100%);
+    }
+    .login-container {
+      max-width: 400px;
+      width: 100%;
+      padding: var(--space-4);
+    }
+    .login-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: var(--space-6);
+      box-shadow: var(--shadow-xl);
+    }
+    .login-title {
+      text-align: center;
+      margin-bottom: var(--space-2);
+      color: var(--auditor-primary);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .login-subtitle {
+      text-align: center;
+      color: var(--gray-500);
+      font-size: 0.875rem;
+      margin-bottom: var(--space-6);
+    }
+    .login-form-group {
+      margin-bottom: var(--space-4);
+    }
+    .login-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+      color: var(--gray-700);
+      font-size: 0.875rem;
+    }
+    .login-input {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      border: 2px solid var(--gray-200);
+      border-radius: 8px;
+      font-family: var(--font-primary);
+      font-size: 1rem;
+      transition: border-color var(--transition-fast);
+    }
+    .login-input:focus {
+      outline: none;
+      border-color: var(--auditor-primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .login-input::placeholder {
+      color: var(--gray-400);
+    }
+    .login-btn {
+      width: 100%;
+      padding: var(--space-4);
+      background: linear-gradient(135deg, var(--auditor-primary) 0%, var(--auditor-secondary) 100%);
+      border: none;
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      box-shadow: var(--shadow-md);
+    }
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .login-error {
+      display: none;
+      margin-top: var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--apollo-error);
+      border-radius: 8px;
+      color: var(--apollo-error);
+      font-size: 0.875rem;
+    }
+    .login-error.visible {
+      display: block;
+    }
+    .cloud-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-left: 10px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <h1 class="login-title">APOLLO<sup>&trade;</sup> DATA AUDITOR</h1>
+      <p class="login-subtitle">Agent Cloud V1.7.R <span class="cloud-badge">CLOUD MODE</span></p>
+
+      <form id="login-form">
+        <div class="login-form-group">
+          <label class="login-label" for="api-key">API Key</label>
+          <input
+            type="password"
+            id="api-key"
+            class="login-input"
+            placeholder="Saisissez votre API key"
+            required
+          />
+        </div>
+
+        <button type="submit" class="login-btn" id="login-btn">
+          Se connecter
+        </button>
+      </form>
+
+      <div id="error-message" class="login-error">
+        <span id="error-text"></span>
+      </div>
+
+      <!-- Language Toggle - Sprint 57 -->
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="/static/en/login.html" style="color: var(--gray-500); font-size: 12px; text-decoration: none;">
+          English version
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/auth.js?v=94c"></script>
+  <script>
+    // Redirect if already authenticated
+    if (AUTH.isAuthenticated()) {
+      window.location.href = '/static/index.html';
+    }
+
+    // Handle login form
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const apiKey = document.getElementById('api-key').value.trim();
+      const errorDiv = document.getElementById('error-message');
+      const errorText = document.getElementById('error-text');
+      const loginBtn = document.getElementById('login-btn');
+
+      // Hide previous error
+      errorDiv.classList.remove('visible');
+
+      if (!apiKey) {
+        errorText.textContent = 'Veuillez saisir une API key';
+        errorDiv.classList.add('visible');
+        return;
+      }
+
+      // Disable button during validation
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Connexion...';
+
+      // Validate with Hub backend
+      const isValid = await AUTH.validateApiKey(apiKey);
+
+      if (isValid) {
+        AUTH.setApiKey(apiKey);
+        window.location.href = '/static/index.html';
+      } else {
+        errorText.textContent = 'API key invalide. Verifiez votre cle.';
+        errorDiv.classList.add('visible');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Se connecter';
+      }
+    });
+  </script>
+</body>
+</html>

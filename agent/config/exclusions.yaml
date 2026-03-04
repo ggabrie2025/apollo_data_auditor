@@ -1,0 +1,261 @@
+# =============================================================================
+# Apollo Agent - Exclusions Configuration (V1.3)
+# Version: 1.3.0
+# Date: 2025-12-11
+#
+# PURPOSE: Reduce noise BEFORE scanning by excluding known non-relevant files
+# NOTE: Files only version (no database exclusions for agent)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# NETWORK MOUNTS EXCLUSION (V2.0)
+# -----------------------------------------------------------------------------
+network:
+  # Exclude network mounts by default (security)
+  exclude_network_mounts: true
+  # Network filesystem types to detect (Linux — /proc/self/mountinfo)
+  network_mount_types:
+    - nfs
+    - nfs4
+    - cifs
+    - smbfs
+    - fuse
+    - sshfs
+    - s3fs
+  # Windows: network drives detected via GetDriveTypeW (DRIVE_REMOTE=4)
+  # No config needed — auto-detection by drive letter
+
+# -----------------------------------------------------------------------------
+# FILE EXCLUSIONS
+# -----------------------------------------------------------------------------
+files:
+  # Extensions to always exclude (system, temp, binary)
+  extensions:
+    # System files
+    - .sys
+    - .dll
+    - .exe
+    - .msi
+    - .dmg
+    - .pkg
+    - .app
+    - .so
+    - .dylib
+
+    # Temporary files
+    - .tmp
+    - .temp
+    - .bak
+    - .swp
+    - .swo
+    - .cache
+    - .lock
+    - .pid
+
+    # NOTE: .log files REMOVED from exclusions (2025-01-01)
+    # Reason: Log files contain PII in error messages (stacktraces, credentials, IPs)
+    # Must be scanned by pii_scanner instead of excluded
+    # See: pii_scanner.scannable_extensions (includes .log)
+
+    # OS metadata
+    - .DS_Store
+    - .Spotlight-V100
+    - .fseventsd
+    - .Trashes
+    - Thumbs.db
+    - desktop.ini
+    - .localized
+
+    # IDE/Editor temp
+    - .pyc
+    - .pyo
+    - .class
+    - .o
+    - .obj
+
+  # Directory patterns to exclude (glob patterns)
+  paths:
+    # Version control
+    - "*/.git/*"
+    - "*/.svn/*"
+    - "*/.hg/*"
+
+    # Package managers / dependencies
+    - "*/node_modules/*"
+    - "*/vendor/*"
+    - "*/bower_components/*"
+    - "*/.npm/*"
+    - "*/.yarn/*"
+
+    # Python environments
+    - "*/venv/*"
+    - "*/.venv/*"
+    - "*/__pycache__/*"
+    - "*/.pytest_cache/*"
+    - "*/.tox/*"
+    - "*/.eggs/*"
+    - "*.egg-info/*"
+
+    # Build outputs
+    - "*/build/*"
+    - "*/dist/*"
+    - "*/target/*"
+    - "*/.gradle/*"
+    - "*/.maven/*"
+
+    # IDE directories
+    - "*/.idea/*"
+    - "*/.vscode/*"
+    - "*/.vs/*"
+    - "*.xcworkspace/*"
+    - "*.xcodeproj/*"
+
+    # Temp and cache directories
+    - "*/temp/*"
+    - "*/tmp/*"
+    - "*/cache/*"
+    - "*/Cache/*"
+    - "*/.cache/*"
+    # SECURITY RATIONALE (2025-01-01):
+    # Cache dirs often contain:
+    # - Temporary processing files (may contain PII before clearing)
+    # - Session tokens, API keys, passwords in memory dumps
+    # - Sensitive data staging areas before encryption
+    # Excluding reduces noise (~20% files) while pii_scanner handles PII in logs
+
+    # Backup directories
+    - "*/backup/*"
+    - "*/backups/*"
+    - "*/.backup/*"
+    # SECURITY RATIONALE (2025-01-01):
+    # Backup dirs traditionally excluded because:
+    # - Duplicate of already-scanned files (dedup: 40% reduction)
+    # - Old data with obsolete PII (retention expired)
+    # WARNING: If backup dirs contain NEW confidential data, add to audit scope
+    # Monitor: audit_sampling() output for backup/ participation rate
+
+    # macOS system
+    - "*/.Trash/*"
+    - "*/Library/Caches/*"
+    - "*/Library/Application Support/*/Cache/*"
+
+    # Windows system
+    - "*/AppData/Local/Temp/*"
+    - "*/Windows/Temp/*"
+    - "*/$Recycle.Bin/*"
+    - "*/System Volume Information/*"
+
+  # Size limits
+  size:
+    # Skip files larger than this (MB) - usually binaries or media
+    # Increased to 5TB (2026-01-05) for Big Data support (TPC-H, Parquet, ORC)
+    # Sprint 37 validation: 2.2TB single file scanned successfully
+    max_file_mb: 5000000
+    # Skip files smaller than this (bytes) - usually empty or stub files
+    min_file_bytes: 10
+
+  # Filename patterns to exclude (regex)
+  filename_patterns:
+    - "^\\.(?!env)"         # Hidden files SAUF .env* (API keys, secrets)
+    - "~\\$"               # Office temp files (~$document.docx)
+    - "\\.part$"           # Partial downloads
+    - "\\.crdownload$"     # Chrome downloads
+    - "\\.download$"       # Safari downloads
+
+# -----------------------------------------------------------------------------
+# FREEMIUM LIMITS (V1.3)
+# -----------------------------------------------------------------------------
+freemium:
+  # Maximum items in free tier
+  max_files: 100
+  max_sources: 3
+
+# -----------------------------------------------------------------------------
+# CUSTOM EXCLUSIONS (User-configurable)
+# -----------------------------------------------------------------------------
+custom:
+  # Add your own extensions to exclude
+  extensions: []
+
+  # Add your own path patterns to exclude
+  paths: []
+
+# -----------------------------------------------------------------------------
+# PII SCANNER CONFIGURATION (V1.5 - Dynamic)
+# -----------------------------------------------------------------------------
+pii_scanner:
+  # Extensions to scan for PII (text-readable files)
+  scannable_extensions:
+    # Text files
+    - .txt
+    - .csv
+    - .json
+    - .xml
+    - .html
+    - .htm
+    - .md
+    - .rst
+    - .log
+    - .sql
+    - .yaml
+    - .yml
+    # Code files (may contain hardcoded credentials/PII)
+    - .py
+    - .js
+    - .ts
+    - .java
+    - .c
+    - .cpp
+    - .h
+    - .php
+    - .rb
+    - .go
+    - .rs
+    - .sh
+    - .bat
+    - .ps1
+    # Config files (may contain secrets)
+    - .ini
+    - .cfg
+    - .conf
+    - .env
+    - .properties
+    # Binary formats with extraction (Sprint 85 - Cloud PII Scan)
+    - .xlsx
+    - .xls
+
+  # Max file size to scan (MB)
+  max_scan_size_mb: 10
+
+# -----------------------------------------------------------------------------
+# FINGERPRINT CONFIGURATION (V1.5 - Dynamic)
+# -----------------------------------------------------------------------------
+fingerprint:
+  # Extensions considered sensitive for scoring
+  sensitive_extensions:
+    - .csv
+    - .xlsx
+    - .xls
+    - .pdf
+    - .docx
+    - .doc
+    - .txt
+    - .json
+    - .xml
+    - .sql
+    - .db
+    - .sqlite
+
+  # Zones considered as archives (lower scan priority)
+  archive_zones:
+    - backup
+    - archive
+    - old
+    - archives
+    - backups
+    - historique
+    - history
+    - trash
+    - temp
+    - tmp
+    - cache
