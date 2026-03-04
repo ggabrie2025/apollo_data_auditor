@@ -15,8 +15,7 @@ jobs:
             artifact: apollo-agent.exe
           - os: ubuntu-latest
             artifact: apollo-agent
-          - os: macos-latest
-            artifact: apollo-agent-macos
+          # macOS: compile en local (on a la machine)
 
     runs-on: ${{ matrix.os }}
 
@@ -89,5 +88,4 @@ jobs:
           files: |
             apollo-agent-windows-latest/apollo-agent.exe
             apollo-agent-ubuntu-latest/apollo-agent
-            apollo-agent-macos-latest/apollo-agent-macos
           generate_release_notes: true
