@@ -104,7 +104,7 @@ dist/apollo-agent /path/to/scan --preview
 |-------|----------|
 | PyInstaller not found | `pip install pyinstaller` |
 | Code signing required | `codesign --deep --sign - dist/apollo-agent` (ad-hoc) |
-| Gatekeeper blocks | `xattr -rd com.apple.quarantine dist/apollo-agent` |
+| Gatekeeper blocks | See `agent/packaging/DEBLOCAGE_OS.md` — procedure complete |
 | Missing modules | Add to `hiddenimports` in `apollo_agent.spec` |
 | Binary too large | Install UPX: `brew install upx` |
 

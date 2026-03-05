@@ -1266,7 +1266,7 @@ async def list_cloud_drives(request: CloudCredentials):
         raise HTTPException(status_code=504, detail="Connection timeout")
     except Exception as e:
         logger.error(f"[CLOUD] List drives error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.post("/api/v2/cloud/audit")
@@ -1588,7 +1588,7 @@ async def test_directory_connection(request: DirectoryAuditRequest):
         raise
     except Exception as e:
         logger.error(f"[DIRECTORY] Test error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
     finally:
         for p in [config_path, config_path.replace("_test_", "_test_out_")]:
             if os.path.exists(p):
@@ -1832,7 +1832,7 @@ async def test_app_connection(request: AppAuditRequest):
         raise
     except Exception as e:
         logger.error(f"[APP] Test error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
     finally:
         for p in [config_path, config_path.replace("_test_", "_test_out_")]:
             if os.path.exists(p):

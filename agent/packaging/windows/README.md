@@ -111,7 +111,8 @@ signtool sign /f certificate.pfx /p password /t http://timestamp.digicert.com ou
 | Nuitka build fails | Check Visual C++ Build Tools installed |
 | Missing modules | Add `--include-module=xxx` to build script |
 | Large binary size | Normal (20-50 MB). Use `--onefile` for single file. |
-| SmartScreen alert | Sign with code signing certificate (~75EUR/year) |
+| SmartScreen alert | See `agent/packaging/DEBLOCAGE_OS.md` — procedure complete |
+| Antivirus faux positif | See `agent/packaging/DEBLOCAGE_OS.md` — exclusions antivirus |
 | PyO3 module not found | Copy `.pyd` to `dist/` manually if not auto-included |
 
 ---
