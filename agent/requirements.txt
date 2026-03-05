@@ -17,3 +17,10 @@ pybloom_live>=3.0.0   # Bloom filter for O(1) dedup
 
 # Cloud PII Content Extraction (Sprint 85)
 openpyxl>=3.1.0       # XLSX cell text extraction for cloud PII scan
+
+# UI Agent (server.py — panneau de scan local)
+python-dotenv>=1.0.0  # .env loading
+fastapi>=0.110.0      # Web framework
+uvicorn>=0.27.0       # ASGI server
+httpx>=0.27.0         # HTTP client (Hub communication)
+pydantic>=2.5.0       # Data validation (contracts)
