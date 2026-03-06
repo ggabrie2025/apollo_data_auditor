@@ -65,6 +65,7 @@ jobs:
           include-data-dir: |
             agent/ui/static=agent/ui/static
             agent/config=agent/config
+          no-deployment-flag: self-execution
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
