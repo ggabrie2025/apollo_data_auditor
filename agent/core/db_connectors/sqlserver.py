@@ -4,7 +4,10 @@ Implementation for Microsoft SQL Server databases
 """
 
 from typing import Dict, Any, List, Optional
-import aioodbc
+try:
+    import aioodbc
+except ImportError:
+    aioodbc = None
 from .base import DatabaseConnector, ConnectorCapabilities
 from .registry import register_connector
 import logging
@@ -72,6 +75,8 @@ class SQLServerConnector(DatabaseConnector):
             )
 
             # Establish connection
+            if aioodbc is None:
+                raise RuntimeError("SQL Server connector requires unixodbc. Install with: apt install unixodbc (Linux) or brew install unixodbc (macOS)")
             self.connection = await aioodbc.connect(dsn=conn_str)
 
             # Count tables
