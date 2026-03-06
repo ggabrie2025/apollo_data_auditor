@@ -3,7 +3,7 @@ title: "Build & Packaging - Linux Agent"
 agent: rails-executor
 project_id: PRJ-APOLLO
 date: 2026-02-24
-tags: [linux, nuitka, packaging, systemd, installer]
+tags: [linux, pyinstaller, packaging, systemd, installer]
 category: technical
 type: guide
 status: active
@@ -17,13 +17,7 @@ status: active
 
 ```bash
 # Python 3.12+
-pip install nuitka ordered-set zstandard
-
-# patchelf (required for --onefile mode)
-sudo apt install patchelf
-
-# GCC (for Nuitka C compilation)
-sudo apt install gcc g++
+pip install pyinstaller
 ```
 
 ### Rust Module
@@ -107,12 +101,11 @@ sudo rm -rf /opt/apollo-agent /etc/apollo /var/log/apollo /var/lib/apollo
 
 | Issue | Solution |
 |-------|----------|
-| Nuitka build fails | Check GCC installed: `gcc --version` |
-| patchelf not found | `sudo apt install patchelf` (required for --onefile) |
-| Missing modules | Add `--include-module=xxx` to build_linux.sh |
+| PyInstaller build fails | Check `pip install pyinstaller` |
+| Missing modules | Add `--hidden-import=xxx` to build_linux.sh |
 | Permission denied | Run install.sh with `sudo` |
 | Service won't start | Check logs: `journalctl -u apollo-agent -n 50` |
-| Binary too large | Normal (20-50 MB). Nuitka bundles Python runtime. |
+| Binary too large | Normal (50-100 MB). PyInstaller bundles Python runtime. |
 
 ---
 

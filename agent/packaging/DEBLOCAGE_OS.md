@@ -83,7 +83,7 @@ Unblock-File -Path "C:\chemin\vers\apollo-agent.exe"
 
 ### Contexte
 
-Les binaires compiles avec Nuitka peuvent declencher des faux positifs antivirus. C'est un comportement connu lie au packaging (pas au code).
+Les binaires compiles avec PyInstaller peuvent declencher des faux positifs antivirus. C'est un comportement connu lie au packaging (pas au code).
 
 ### Solution : Ajouter une exclusion
 

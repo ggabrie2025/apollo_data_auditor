@@ -54,24 +54,33 @@ jobs:
         run: pip install -r agent/requirements.txt
         shell: bash
 
-      - name: Build with Nuitka
-        uses: Nuitka/Nuitka-Action@main
-        with:
-          nuitka-version: main
-          script-name: agent/main.py
-          mode: onefile
-          output-filename: ${{ matrix.artifact }}
-          include-package: agent
-          include-data-dir: |
-            agent/ui/static=agent/ui/static
-            agent/config=agent/config
-          no-deployment-flag: self-execution
+      - name: Build with PyInstaller
+        run: |
+          pip install pyinstaller
+          pyinstaller --onefile \
+            --name "${{ matrix.artifact }}" \
+            --add-data "agent/ui/static:agent/ui/static" \
+            --add-data "agent/config:agent/config" \
+            --hidden-import asyncpg \
+            --hidden-import aiomysql \
+            --hidden-import motor \
+            --hidden-import aioodbc \
+            --hidden-import msal \
+            --hidden-import aiohttp \
+            --hidden-import pybloom_live \
+            --hidden-import openpyxl \
+            --hidden-import uvicorn \
+            --hidden-import fastapi \
+            --hidden-import httpx \
+            --hidden-import pydantic \
+            agent/main.py
+        shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: apollo-agent-${{ matrix.os }}
-          path: build/${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
           retention-days: 90
 
   release:

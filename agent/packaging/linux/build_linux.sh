@@ -1,11 +1,10 @@
 #!/bin/bash
 # =============================================================================
-# Apollo Agent V1.7.R - Linux Build Script (Nuitka)
+# Apollo Agent V1.7.R - Linux Build Script (PyInstaller)
 # =============================================================================
 #
 # Prerequisites:
-#     pip install nuitka ordered-set zstandard
-#     sudo apt install patchelf  (for --onefile)
+#     pip install pyinstaller
 #
 # Usage:
 #     cd agent/packaging/linux
@@ -23,22 +22,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGING_DIR="$(dirname "$SCRIPT_DIR")"
 AGENT_DIR="$(dirname "$PACKAGING_DIR")"
 
-echo "=== Apollo Agent Build Script (Nuitka - Linux) ==="
+echo "=== Apollo Agent Build Script (PyInstaller - Linux) ==="
 echo "Agent directory: $AGENT_DIR"
 
-# Check Nuitka
-if ! python3 -m nuitka --version &>/dev/null; then
-    echo "Error: Nuitka not found. Install with: pip install nuitka ordered-set zstandard"
+# Check PyInstaller
+if ! python3 -m PyInstaller --version &>/dev/null; then
+    echo "Error: PyInstaller not found. Install with: pip install pyinstaller"
     exit 1
-fi
-
-# Check patchelf (needed for --onefile on Linux)
-if ! command -v patchelf &>/dev/null; then
-    echo "Warning: patchelf not found. Install with: sudo apt install patchelf"
-    echo "Falling back to --standalone mode (directory output)"
-    ONEFILE=""
-else
-    ONEFILE="--onefile"
 fi
 
 # Clean previous builds
@@ -46,40 +36,31 @@ echo ""
 echo "Cleaning previous builds..."
 rm -rf "$SCRIPT_DIR/dist" "$SCRIPT_DIR/build"
 
-# Build with Nuitka
+# Build with PyInstaller
 echo ""
-echo "Building with Nuitka (this may take 5-15 minutes on first build)..."
-python3 -m nuitka \
-    --standalone \
-    $ONEFILE \
-    --output-dir="$SCRIPT_DIR/dist" \
-    --output-filename=apollo-agent \
-    --include-data-files="$AGENT_DIR/config/exclusions.yaml=config/exclusions.yaml" \
-    --include-data-files="$AGENT_DIR/VERSION=VERSION" \
-    --include-data-dir="$AGENT_DIR/ui/static=agent/ui/static" \
-    --include-module=yaml \
-    --include-module=ldap3 \
-    --include-module=requests \
-    --include-module=asyncpg \
-    --include-module=aiomysql \
-    --include-module=pymongo \
-    --include-module=motor \
-    --include-module=pyodbc \
-    --include-module=certifi \
-    --include-module=apollo_io_native \
-    --include-module=uvicorn \
-    --include-module=fastapi \
-    --include-module=pydantic \
-    --include-module=dotenv \
-    --include-module=starlette \
-    --include-package=agent.core \
-    --include-package=agent.models \
-    --include-package=agent.observability \
-    --include-package=agent.ui \
-    --nofollow-import-to=tkinter \
-    --nofollow-import-to=unittest \
-    --nofollow-import-to=pydoc \
-    "$AGENT_DIR/main.py"
+echo "Building with PyInstaller..."
+cd "$AGENT_DIR/.."
+python3 -m PyInstaller --onefile \
+    --name apollo-agent \
+    --distpath "$SCRIPT_DIR/dist" \
+    --workpath "$SCRIPT_DIR/build" \
+    --add-data "agent/ui/static:agent/ui/static" \
+    --add-data "agent/config:agent/config" \
+    --hidden-import asyncpg \
+    --hidden-import aiomysql \
+    --hidden-import motor \
+    --hidden-import aioodbc \
+    --hidden-import msal \
+    --hidden-import aiohttp \
+    --hidden-import pybloom_live \
+    --hidden-import openpyxl \
+    --hidden-import uvicorn \
+    --hidden-import fastapi \
+    --hidden-import httpx \
+    --hidden-import pydantic \
+    --hidden-import yaml \
+    --hidden-import apollo_io_native \
+    agent/main.py
 
 # Check output
 if [ -f "$SCRIPT_DIR/dist/apollo-agent" ]; then

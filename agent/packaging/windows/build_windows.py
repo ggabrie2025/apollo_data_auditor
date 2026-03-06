@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
-Apollo Agent V1.7.R - Windows Build Script (Nuitka - Programmatic)
+Apollo Agent V1.7.R - Windows Build Script (PyInstaller - Programmatic)
 
 Alternative to build_windows.bat for CI/CD or cross-platform invocation.
-Uses Nuitka's Python API for more control over the build process.
 
 Usage:
     python build_windows.py [--test]
@@ -17,72 +16,48 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
 AGENT_DIR = SCRIPT_DIR.parent.parent  # agent/packaging/windows -> agent/
+ROOT_DIR = AGENT_DIR.parent           # agent/ -> repo root
 DIST_DIR = SCRIPT_DIR / "dist"
 
 
 def build(test_mode: bool = False):
-    """Build Apollo Agent with Nuitka."""
+    """Build Apollo Agent with PyInstaller."""
     os.environ["PYTHONUTF8"] = "1"
 
     cmd = [
-        sys.executable, "-m", "nuitka",
-        "--standalone",
+        sys.executable, "-m", "PyInstaller",
         "--onefile",
-        f"--output-dir={DIST_DIR}",
-        "--output-filename=apollo-agent.exe",
+        "--name", "apollo-agent.exe",
+        f"--distpath={DIST_DIR}",
+        f"--workpath={SCRIPT_DIR / 'build'}",
         # Data files
-        f"--include-data-files={AGENT_DIR / 'config' / 'exclusions.yaml'}=config/exclusions.yaml",
-        f"--include-data-files={AGENT_DIR / 'VERSION'}=VERSION",
-        # UI static files (HTML, JS, CSS, assets) — required for --serve mode
-        f"--include-data-dir={AGENT_DIR / 'ui' / 'static'}=agent/ui/static",
-        # Modules to include
-        "--include-module=yaml",
-        "--include-module=ldap3",
-        "--include-module=requests",
-        "--include-module=asyncpg",
-        "--include-module=aiomysql",
-        "--include-module=pymongo",
-        "--include-module=motor",
-        "--include-module=pyodbc",
-        "--include-module=certifi",
-        "--include-module=apollo_io_native",
-        # UI server dependencies (--serve mode)
-        "--include-module=uvicorn",
-        "--include-module=fastapi",
-        "--include-module=pydantic",
-        "--include-module=dotenv",
-        "--include-module=starlette",
-        # Packages
-        "--include-package=agent.core",
-        "--include-package=agent.models",
-        "--include-package=agent.observability",
-        "--include-package=agent.ui",
-        # Excludes
-        "--nofollow-import-to=tkinter",
-        "--nofollow-import-to=unittest",
-        "--nofollow-import-to=pydoc",
-        # Windows metadata
-        "--windows-console-mode=force",
-        "--company-name=Apollo Data Auditor",
-        "--product-name=Apollo Agent",
-        "--file-version=1.7.0.0",
-        "--product-version=1.7.0.0",
-        "--file-description=Apollo Data Auditor Agent",
-        "--copyright=(c) 2025-2026 Gilles Gabriel",
+        f"--add-data={AGENT_DIR / 'ui' / 'static'};agent/ui/static",
+        f"--add-data={AGENT_DIR / 'config'};agent/config",
+        # Hidden imports
+        "--hidden-import=asyncpg",
+        "--hidden-import=aiomysql",
+        "--hidden-import=motor",
+        "--hidden-import=aioodbc",
+        "--hidden-import=msal",
+        "--hidden-import=aiohttp",
+        "--hidden-import=pybloom_live",
+        "--hidden-import=openpyxl",
+        "--hidden-import=uvicorn",
+        "--hidden-import=fastapi",
+        "--hidden-import=httpx",
+        "--hidden-import=pydantic",
+        "--hidden-import=yaml",
+        "--hidden-import=apollo_io_native",
         # Entry point
         str(AGENT_DIR / "main.py"),
     ]
 
-    icon = SCRIPT_DIR / "apollo_icon.ico"
-    if icon.exists():
-        cmd.insert(-1, f"--windows-icon-from-ico={icon}")
-
-    print(f"Building Apollo Agent with Nuitka...")
+    print("Building Apollo Agent with PyInstaller...")
     print(f"Agent dir: {AGENT_DIR}")
     print(f"Output: {DIST_DIR / 'apollo-agent.exe'}")
     print()
 
-    result = subprocess.run(cmd, cwd=str(AGENT_DIR.parent))
+    result = subprocess.run(cmd, cwd=str(ROOT_DIR))
 
     if result.returncode != 0:
         print("\n=== BUILD FAILED ===")

@@ -1,11 +1,10 @@
 @echo off
 REM =============================================================================
-REM Apollo Agent V1.7.R - Windows Build Script (Nuitka)
+REM Apollo Agent V1.7.R - Windows Build Script (PyInstaller)
 REM =============================================================================
 REM
 REM Prerequisites:
-REM     pip install nuitka ordered-set zstandard
-REM     Visual C++ Build Tools (or Visual Studio)
+REM     pip install pyinstaller
 REM
 REM Usage:
 REM     cd agent\packaging\windows
@@ -23,14 +22,15 @@ REM Resolve paths
 set SCRIPT_DIR=%~dp0
 set PACKAGING_DIR=%SCRIPT_DIR%..
 set AGENT_DIR=%PACKAGING_DIR%\..
+set ROOT_DIR=%AGENT_DIR%\..
 
-echo === Apollo Agent Build Script (Nuitka - Windows) ===
+echo === Apollo Agent Build Script (PyInstaller - Windows) ===
 echo Agent directory: %AGENT_DIR%
 
-REM Check Nuitka
-python -m nuitka --version >nul 2>&1
+REM Check PyInstaller
+python -m PyInstaller --version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo ERROR: Nuitka not found. Install with: pip install nuitka ordered-set zstandard
+    echo ERROR: PyInstaller not found. Install with: pip install pyinstaller
     exit /b 1
 )
 
@@ -40,41 +40,31 @@ echo Cleaning previous builds...
 if exist "%SCRIPT_DIR%dist" rmdir /S /Q "%SCRIPT_DIR%dist"
 if exist "%SCRIPT_DIR%build" rmdir /S /Q "%SCRIPT_DIR%build"
 
-REM Build with Nuitka
+REM Build with PyInstaller
 echo.
-echo Building with Nuitka (this may take 5-15 minutes on first build)...
-python -m nuitka ^
-    --standalone ^
-    --onefile ^
-    --output-dir="%SCRIPT_DIR%dist" ^
-    --output-filename=apollo-agent.exe ^
-    --include-data-files="%AGENT_DIR%\config\exclusions.yaml=config/exclusions.yaml" ^
-    --include-data-files="%AGENT_DIR%\VERSION=VERSION" ^
-    --include-module=yaml ^
-    --include-module=ldap3 ^
-    --include-module=requests ^
-    --include-module=pymongo ^
-    --include-module=psycopg2 ^
-    --include-module=mysql.connector ^
-    --include-module=pyodbc ^
-    --include-module=certifi ^
-    --include-module=apollo_io_native ^
-    --include-package=agent.core ^
-    --include-package=agent.models ^
-    --include-package=agent.observability ^
-    --include-package=agent.ui ^
-    --nofollow-import-to=tkinter ^
-    --nofollow-import-to=unittest ^
-    --nofollow-import-to=pydoc ^
-    --enable-console ^
-    --company-name="Apollo Data Auditor" ^
-    --product-name="Apollo Agent" ^
-    --file-version=1.7.0.0 ^
-    --product-version=1.7.0.0 ^
-    --file-description="Apollo Data Auditor Agent" ^
-    --copyright="(c) 2025-2026 Gilles Gabriel" ^
-    --windows-icon-from-ico="%SCRIPT_DIR%apollo_icon.ico" ^
-    "%AGENT_DIR%\main.py"
+echo Building with PyInstaller...
+cd "%ROOT_DIR%"
+python -m PyInstaller --onefile ^
+    --name apollo-agent.exe ^
+    --distpath "%SCRIPT_DIR%dist" ^
+    --workpath "%SCRIPT_DIR%build" ^
+    --add-data "agent\ui\static;agent\ui\static" ^
+    --add-data "agent\config;agent\config" ^
+    --hidden-import asyncpg ^
+    --hidden-import aiomysql ^
+    --hidden-import motor ^
+    --hidden-import aioodbc ^
+    --hidden-import msal ^
+    --hidden-import aiohttp ^
+    --hidden-import pybloom_live ^
+    --hidden-import openpyxl ^
+    --hidden-import uvicorn ^
+    --hidden-import fastapi ^
+    --hidden-import httpx ^
+    --hidden-import pydantic ^
+    --hidden-import yaml ^
+    --hidden-import apollo_io_native ^
+    agent\main.py
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
@@ -90,6 +80,7 @@ if exist "%SCRIPT_DIR%dist\apollo-agent.exe" (
     echo.
     echo Test with:
     echo   dist\apollo-agent.exe --version
+    echo   dist\apollo-agent.exe --serve
     echo   dist\apollo-agent.exe C:\path\to\scan --preview
 ) else (
     echo.

@@ -3,7 +3,7 @@ title: "Build & Packaging - Windows Agent"
 agent: rails-executor
 project_id: PRJ-APOLLO
 date: 2026-02-21
-tags: [windows, nuitka, inno-setup, packaging, installer]
+tags: [windows, pyinstaller, inno-setup, packaging, installer]
 category: technical
 type: guide
 status: active
@@ -17,10 +17,7 @@ status: active
 
 ```powershell
 # Python 3.12+ (x64)
-pip install nuitka ordered-set zstandard
-
-# Visual C++ Build Tools (for Nuitka C compilation)
-# Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+pip install pyinstaller
 
 # Inno Setup 6.x (for installer)
 # Download from: https://jrsoftware.org/isinfo.php
@@ -108,7 +105,7 @@ signtool sign /f certificate.pfx /p password /t http://timestamp.digicert.com ou
 
 | Issue | Solution |
 |-------|----------|
-| Nuitka build fails | Check Visual C++ Build Tools installed |
+| PyInstaller build fails | Check `pip install pyinstaller` |
 | Missing modules | Add `--include-module=xxx` to build script |
 | Large binary size | Normal (20-50 MB). Use `--onefile` for single file. |
 | SmartScreen alert | See `agent/packaging/DEBLOCAGE_OS.md` — procedure complete |

@@ -11,7 +11,7 @@ status: active
 
 # Apollo Agent - macOS Build & Packaging
 
-> **Note**: macOS build uses PyInstaller (legacy). Migration to Nuitka is planned (P3).
+> **Note**: macOS build uses PyInstaller (onefile).
 
 ## Prerequisites
 
@@ -110,7 +110,6 @@ dist/apollo-agent /path/to/scan --preview
 
 ## Roadmap
 
-- **P3**: Migrate from PyInstaller to Nuitka (align with Linux/Windows)
 - **P3**: Automated `.pkg` installer with API key prompt
 - **P3**: Homebrew cask distribution
 
