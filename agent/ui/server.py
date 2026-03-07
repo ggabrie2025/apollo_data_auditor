@@ -758,7 +758,10 @@ async def execute_files_audit(session_id: str, sources: List[str]):
         # ================================================================
         # SUBPROCESS CLI - ASYNC (allows abort during execution)
         # ================================================================
-        cmd = [sys.executable, "-m", "agent.main"] + sources + ["-o", output_path]
+        if getattr(sys, 'frozen', False):
+            cmd = [sys.executable] + sources + ["-o", output_path]
+        else:
+            cmd = [sys.executable, "-m", "agent.main"] + sources + ["-o", output_path]
 
         logger.info(f"[FILES] Running: {' '.join(cmd[:5])}... -o {output_path}")
 
@@ -1233,8 +1236,8 @@ async def list_cloud_drives(request: CloudCredentials):
     try:
         # Use subprocess to call agent with list-drives (if implemented)
         # For now, authenticate and list drives via direct API call
-        cmd = [
-            sys.executable, "-m", "agent.main",
+        _exe = [] if getattr(sys, 'frozen', False) else ["-m", "agent.main"]
+        cmd = [sys.executable] + _exe + [
             "--onedrive",
             "--tenant-id", request.tenant_id,
             "--client-id", request.client_id,
@@ -1328,8 +1331,8 @@ async def execute_cloud_audit(
         # ================================================================
         # SUBPROCESS CLI - ASYNC
         # ================================================================
-        cmd = [
-            sys.executable, "-m", "agent.main",
+        _exe = [] if getattr(sys, 'frozen', False) else ["-m", "agent.main"]
+        cmd = [sys.executable] + _exe + [
             "--onedrive",
             "--tenant-id", tenant_id,
             "--client-id", client_id,

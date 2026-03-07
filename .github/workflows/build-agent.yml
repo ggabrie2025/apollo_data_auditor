@@ -58,6 +58,8 @@ jobs:
             --add-data "agent/ui/static:agent/ui/static" \
             --add-data "agent/config:agent/config" \
             --hidden-import asyncpg \
+            --hidden-import asyncpg.pgproto.pgproto \
+            --hidden-import asyncpg.protocol.protocol \
             --hidden-import aiomysql \
             --hidden-import motor \
             --hidden-import aioodbc \

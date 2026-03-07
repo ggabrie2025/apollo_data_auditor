@@ -62,6 +62,8 @@ a = Analysis(
         'starlette',
         'pydantic',
         'dotenv',
+        'asyncpg.pgproto.pgproto',
+        'asyncpg.protocol.protocol',
         # Fallback imports (from core.xxx / models.xxx)
         'core.collector',
         'core.exclusions',
