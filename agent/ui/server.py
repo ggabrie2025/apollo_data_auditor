@@ -1046,7 +1046,10 @@ async def execute_databases_audit(session_id: str, sources: List[dict]):
                 # ================================================================
                 # SUBPROCESS CLI - OBLIGATOIRE
                 # ================================================================
-                cmd = [sys.executable, "-m", "agent.main_db", "--config", config_path, "-o", output_path]
+                if getattr(sys, 'frozen', False):
+                    cmd = [sys.executable, "--mode", "db", "--config", config_path, "-o", output_path]
+                else:
+                    cmd = [sys.executable, "-m", "agent.main_db", "--config", config_path, "-o", output_path]
 
                 logger.info(f"[DB] Running: {' '.join(cmd)}")
 
@@ -1553,7 +1556,10 @@ async def test_directory_connection(request: DirectoryAuditRequest):
 
         output_path = config_path.replace("_test_", "_test_out_")
 
-        cmd = [sys.executable, "-m", "agent.main_directory", "--config", config_path, "-o", output_path]
+        if getattr(sys, 'frozen', False):
+            cmd = [sys.executable, "--mode", "directory", "--config", config_path, "-o", output_path]
+        else:
+            cmd = [sys.executable, "-m", "agent.main_directory", "--config", config_path, "-o", output_path]
 
         result = subprocess.run(
             cmd,
@@ -1640,7 +1646,10 @@ async def execute_directory_audit(session_id: str, config: dict):
         # ================================================================
         # SUBPROCESS CLI
         # ================================================================
-        cmd = [sys.executable, "-m", "agent.main_directory", "--config", config_path, "-o", output_path]
+        if getattr(sys, 'frozen', False):
+            cmd = [sys.executable, "--mode", "directory", "--config", config_path, "-o", output_path]
+        else:
+            cmd = [sys.executable, "-m", "agent.main_directory", "--config", config_path, "-o", output_path]
 
         logger.info(f"[DIRECTORY] Running: agent.main_directory --config ... -o {output_path}")
 
@@ -1796,7 +1805,10 @@ async def test_app_connection(request: AppAuditRequest):
 
         output_path = config_path.replace("_test_", "_test_out_")
 
-        cmd = [sys.executable, "-m", "agent.main_app", "--config", config_path, "-o", output_path]
+        if getattr(sys, 'frozen', False):
+            cmd = [sys.executable, "--mode", "app", "--config", config_path, "-o", output_path]
+        else:
+            cmd = [sys.executable, "-m", "agent.main_app", "--config", config_path, "-o", output_path]
 
         result = subprocess.run(
             cmd,
@@ -1884,7 +1896,10 @@ async def execute_app_audit(session_id: str, config: dict):
         # ================================================================
         # SUBPROCESS CLI
         # ================================================================
-        cmd = [sys.executable, "-m", "agent.main_app", "--config", config_path, "-o", output_path]
+        if getattr(sys, 'frozen', False):
+            cmd = [sys.executable, "--mode", "app", "--config", config_path, "-o", output_path]
+        else:
+            cmd = [sys.executable, "-m", "agent.main_app", "--config", config_path, "-o", output_path]
 
         logger.info(f"[APP] Running: agent.main_app --config ... -o {output_path}")
 

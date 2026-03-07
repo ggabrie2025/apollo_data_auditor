@@ -284,8 +284,36 @@ def main():
         action="store_true",
         help="Launch the web UI server (opens browser automatically)"
     )
+    parser.add_argument(
+        "--mode",
+        choices=["files", "db", "directory", "app"],
+        default="files",
+        help="Scan mode (default: files). Used by frozen binary to route to sub-scanners."
+    )
 
     args = parser.parse_args()
+
+    # Frozen binary routing — route --mode db/directory/app to sub-modules
+    if getattr(sys, 'frozen', False) and args.mode != 'files':
+        new_argv = [sys.argv[0]]
+        skip_next = False
+        for arg in sys.argv[1:]:
+            if skip_next:
+                skip_next = False
+                continue
+            if arg == '--mode':
+                skip_next = True
+                continue
+            new_argv.append(arg)
+        sys.argv = new_argv
+
+        if args.mode == 'db':
+            from agent.main_db import main as _main
+        elif args.mode == 'directory':
+            from agent.main_directory import main as _main
+        elif args.mode == 'app':
+            from agent.main_app import main as _main
+        return _main()
 
     # Handle version
     if args.version:
