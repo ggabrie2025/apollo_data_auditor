@@ -28,10 +28,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install system dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: brew install unixodbc
-
       - name: Install system dependencies (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y unixodbc-dev
@@ -83,19 +79,33 @@ jobs:
           path: dist/${{ matrix.artifact }}
           retention-days: 90
 
-  release:
+  checksum:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
 
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
         with:
-          files: |
-            apollo-agent-windows-latest/apollo-agent.exe
-            apollo-agent-ubuntu-latest/apollo-agent
-          generate_release_notes: true
+          path: artifacts/
+
+      - name: Compute SHA256SUMS
+        run: |
+          cd artifacts
+          find . -type f \( -name "apollo-agent" -o -name "apollo-agent.exe" \) | sort | while read f; do
+            sha256sum "$f" | sed 's|\./[^/]*/||'
+          done > ../SHA256SUMS.txt
+          echo ""
+          echo "=== SHA256SUMS.txt ==="
+          cat ../SHA256SUMS.txt
+
+      - name: Upload SHA256SUMS
+        uses: actions/upload-artifact@v4
+        with:
+          name: checksums
+          path: SHA256SUMS.txt
+          retention-days: 90
+
+      # NOTE: Les binaires sont distribues exclusivement via aiia-tech.com
+      # SHA256SUMS.txt doit etre deploye sur aiia-tech.com/download/SHA256SUMS.txt
+      # en meme temps que les binaires, apres validation manuelle.
