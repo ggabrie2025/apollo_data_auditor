@@ -1,3 +1,5 @@
+[![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue.svg)](./LICENSE)
+
 # Apollo Data Auditor — Agent V1.7.R
 
 Autonomous agent for data audit and GDPR exposure assessment.
@@ -28,4 +30,13 @@ Pre-built binaries available in [Releases](../../releases).
 
 ## License
 
-See [LICENSE](LICENSE).
+Apollo Agent is licensed under the **Business Source License 1.1 (BSL 1.1)**.
+
+- **Free for non-commercial use** — personal, research, evaluation
+- **Commercial use requires a separate license**
+- **Converts to Apache 2.0** on 2030-01-01 (or 4 years after each version's release, whichever is earlier)
+
+For commercial licensing: contact@aiia-tech.com
+
+> This is **not** an open-source license. It is a *source-available* license.
+> See [LICENSE](./LICENSE) for full terms.
