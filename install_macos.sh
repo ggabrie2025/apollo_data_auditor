@@ -10,9 +10,7 @@
 #     curl -O https://aiia-tech.com/download/install_macos.sh
 #     bash install_macos.sh [--api-key YOUR_KEY] [--no-verify]
 #
-# ARCHITECTURE : binaire compilé sur Intel x86_64 (PyInstaller local).
-# Apple Silicon (M1/M2/M3) : Rosetta 2 requis.
-#   sudo softwareupdate --install-rosetta
+# ARCHITECTURE : binaire natif arm64 (Apple Silicon M1/M2/M3/M4).
 #
 # Binaires officiels distribues exclusivement via aiia-tech.com
 #
@@ -21,7 +19,7 @@
 
 set -e
 
-DOWNLOAD_BASE="https://aiia-tech.com/download"
+DOWNLOAD_BASE="${DOWNLOAD_BASE:-https://aiia-tech.com/download}"
 BINARY_NAME="apollo-agent-macos"
 INSTALL_PATH="/usr/local/bin/apollo-agent"
 CONFIG_DIR="$HOME/.apollo"
@@ -58,23 +56,9 @@ if [ "$(uname -s)" != "Darwin" ]; then
     exit 1
 fi
 
-# Architecture warning
+# Architecture info
 ARCH=$(uname -m)
-if [ "$ARCH" = "arm64" ]; then
-    echo -e "${YELLOW}Warning: Apple Silicon detecte (arm64).${NC}"
-    echo "Le binaire apollo-agent-macos est compile pour Intel x86_64."
-    echo "Rosetta 2 est requis pour l'executer :"
-    echo "  sudo softwareupdate --install-rosetta"
-    echo ""
-    echo "Continuer l'installation ? (Rosetta requis) [y/N]"
-    read -r CONFIRM
-    if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
-        echo "Installation annulee."
-        exit 0
-    fi
-else
-    echo "Architecture : Intel x86_64 (OK)"
-fi
+echo "Architecture : $ARCH"
 
 TMP_DIR=$(mktemp -d)
 trap "rm -rf '$TMP_DIR'" EXIT
