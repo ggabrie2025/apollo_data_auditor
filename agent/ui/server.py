@@ -955,7 +955,7 @@ async def execute_files_audit(session_id: str, sources: List[str]):
         # ================================================================
         if result.returncode != 0:
             logger.error(f"[FILES] CLI failed (exit {result.returncode}): {result.stderr}")
-            raise Exception(f"CLI failed: {result.stderr[:500]}")
+            raise Exception("Files scan failed. Check agent logs for details.")
 
         # ================================================================
         # VALIDATION 2: JSON exists
@@ -1498,7 +1498,7 @@ async def execute_cloud_audit(
         # ================================================================
         if result.returncode != 0:
             logger.error(f"[CLOUD] CLI failed (exit {result.returncode}): {result.stderr}")
-            raise Exception(f"CLI failed: {result.stderr[:500]}")
+            raise Exception("Cloud scan failed. Check agent logs for details.")
 
         # ================================================================
         # VALIDATION 2: JSON exists
@@ -1734,7 +1734,7 @@ async def execute_directory_audit(session_id: str, config: dict):
         if process.returncode != 0:
             stderr_text = stderr.decode('utf-8', errors='replace') if stderr else ''
             logger.error(f"[DIRECTORY] CLI failed (exit {process.returncode}): {stderr_text}")
-            raise Exception(f"CLI failed: {stderr_text[:500]}")
+            raise Exception("Directory scan failed. Check agent logs for details.")
 
         # ================================================================
         # VALIDATION 2: JSON exists
@@ -1980,7 +1980,7 @@ async def execute_app_audit(session_id: str, config: dict):
         if process.returncode != 0:
             stderr_text = stderr.decode('utf-8', errors='replace') if stderr else ''
             logger.error(f"[APP] CLI failed (exit {process.returncode}): {stderr_text}")
-            raise Exception(f"CLI failed: {stderr_text[:500]}")
+            raise Exception("App scan failed. Check agent logs for details.")
 
         # ================================================================
         # VALIDATION 2: JSON exists
