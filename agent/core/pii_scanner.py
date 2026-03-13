@@ -593,7 +593,11 @@ PII_PATTERNS: Dict[str, re.Pattern] = {
         r'sk_(?:live|test)_[A-Za-z0-9]{24,}|'
         # GitHub: ghp_, gho_, ghu_, ghs_, ghr_ + 36 alphanum
         r'gh[pousr]_[A-Za-z0-9]{36}|'
-        # Azure: 32-char hex with dashes (subscription keys)
+        # Azure: contextual keyword + UUID (32-char hex with dashes)
+        r'(?:AZURE_[A-Z_]*KEY|AZURE_[A-Z_]*TOKEN|AZURE_[A-Z_]*SECRET'
+        r'|COGNITIVE_SERVICE_KEY|AZURE_SUBSCRIPTION_ID'
+        r'|Ocp-Apim-Subscription-Key|api[_-]key|subscription[_-]?(?:key|id))'
+        r'\s*[:="\s]\s*'
         r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
         r')',
         re.IGNORECASE
@@ -1128,6 +1132,10 @@ PII_PATTERNS_BYTES = {
         rb'AIza[0-9A-Za-z\-_]{35}|'
         rb'sk_(?:live|test)_[A-Za-z0-9]{24,}|'
         rb'gh[pousr]_[A-Za-z0-9]{36}|'
+        rb'(?:AZURE_[A-Z_]*KEY|AZURE_[A-Z_]*TOKEN|AZURE_[A-Z_]*SECRET'
+        rb'|COGNITIVE_SERVICE_KEY|AZURE_SUBSCRIPTION_ID'
+        rb'|Ocp-Apim-Subscription-Key|api[_-]key|subscription[_-]?(?:key|id))'
+        rb'\s*[:="\s]\s*'
         rb'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
         rb')',
         re.IGNORECASE

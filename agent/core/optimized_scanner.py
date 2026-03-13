@@ -247,6 +247,10 @@ PII_PATTERNS = {
         rb'AIza[0-9A-Za-z\-_]{35}|'
         rb'sk_(?:live|test)_[A-Za-z0-9]{24,}|'
         rb'gh[pousr]_[A-Za-z0-9]{36}|'
+        rb'(?:AZURE_[A-Z_]*KEY|AZURE_[A-Z_]*TOKEN|AZURE_[A-Z_]*SECRET'
+        rb'|COGNITIVE_SERVICE_KEY|AZURE_SUBSCRIPTION_ID'
+        rb'|Ocp-Apim-Subscription-Key|api[_-]key|subscription[_-]?(?:key|id))'
+        rb'\s*[:="\s]\s*'
         rb'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
         rb')',
         re.IGNORECASE
@@ -326,70 +330,6 @@ def scan_pii_parallel(file_contents: Dict[str, bytes]) -> Dict[str, List]:
     pii_count = sum(1 for r in results.values() if r)
     logger.info(f"[CPU] Found PII in {pii_count}/{len(results)} files")
     return results
-
-# ============================================================================
-# OPTIMIZED SCAN PIPELINE
-# ============================================================================
-
-def scan_files_optimized(file_paths: List[str], sampler=None) -> Dict:
-    """
-    Optimized scan pipeline:
-    1. Dedup with Bloom filter (O(1))
-    2. Apply sampling
-    3. Parallel file reading (ThreadPool)
-    4. Parallel PII scanning (ProcessPool)
-    """
-    logger.info(f"[OPT] Starting optimized scan: {len(file_paths)} files")
-    
-    # Step 1: Dedup with Bloom filter
-    if BLOOM_AVAILABLE:
-        bloom = BloomFilter(capacity=1_000_000, error_rate=0.001)
-        unique_files = []
-        for fp in file_paths:
-            # Create fingerprint based on path+size+mtime
-            try:
-                stat = os.stat(fp)
-                fingerprint = f"{fp}:{stat.st_size}:{int(stat.st_mtime)}"
-                fp_hash = hashlib.md5(fingerprint.encode()).hexdigest()
-                if fp_hash not in bloom:
-                    bloom.add(fp_hash)
-                    unique_files.append(fp)
-            except OSError:
-                continue
-        dedup_rate = (1 - len(unique_files) / len(file_paths)) * 100 if file_paths else 0
-        logger.info(f"[OPT] After dedup: {len(unique_files)} files ({dedup_rate:.1f}% removed)")
-    else:
-        unique_files = file_paths
-    
-    # Step 2: Apply sampling if sampler provided
-    if sampler and hasattr(sampler, 'filter'):
-        # Generate lightweight fingerprints for sampling
-        from .fingerprint import generate_fingerprint
-        fingerprints = [generate_fingerprint(fp) for fp in unique_files]
-        fingerprints = [fp for fp in fingerprints if fp is not None]
-        sampled = sampler.filter(fingerprints)
-        files_to_scan = [fp.path_hash for fp in sampled]  # Need to map back
-        logger.info(f"[OPT] After sampling: {len(sampled)} files")
-        # For now, use unique_files directly
-        files_to_scan = unique_files[:len(sampled)] if len(sampled) < len(unique_files) else unique_files
-    else:
-        files_to_scan = unique_files
-    
-    # Step 3: Parallel file reading
-    file_contents = read_files_parallel(files_to_scan)
-    
-    # Step 4: Parallel PII scanning
-    pii_results = scan_pii_parallel(file_contents)
-    
-    logger.info(f"[OPT] Scan complete: {len(pii_results)} files processed")
-    
-    return {
-        'total_files': len(file_paths),
-        'unique_files': len(unique_files),
-        'files_scanned': len(files_to_scan),
-        'files_with_pii': sum(1 for r in pii_results.values() if r),
-        'pii_details': pii_results
-    }
 
 # ============================================================================
 # INTEGRATION HELPER
