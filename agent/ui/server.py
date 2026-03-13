@@ -42,7 +42,7 @@ from typing import Dict, List, Optional, Any, Literal
 import requests
 from dotenv import load_dotenv
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Request
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -446,6 +446,40 @@ if static_dir.exists():
 
 
 # ============================================================================
+# AUTH MIDDLEWARE — KI-078: protect LAN-exposed endpoints
+# ============================================================================
+_PUBLIC_PATHS = frozenset({"/", "/health", "/api/v2/set-api-key"})
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    """Require active API key for all non-public endpoints."""
+    path = request.url.path
+
+    # Static files, public endpoints — pass through
+    if path.startswith("/static") or path in _PUBLIC_PATHS:
+        return await call_next(request)
+
+    # Before login, no key set — allow (user must configure first)
+    active_key = _get_active_key()
+    if not active_key:
+        return await call_next(request)
+
+    # Check auth: X-API-Key header or apollo_api_key cookie
+    req_key = (
+        request.headers.get("X-API-Key")
+        or request.cookies.get("apollo_api_key")
+    )
+    if req_key != active_key:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Unauthorized. Please login first."}
+        )
+
+    return await call_next(request)
+
+
+# ============================================================================
 # HEALTH & INFO
 # ============================================================================
 
@@ -664,12 +698,14 @@ async def set_api_key(request: Request):
     import threading
     threading.Thread(target=_silent_infra_scan, daemon=True).start()
 
-    return {
+    resp = JSONResponse(content={
         "status": "ok",
         "client_name": client_name,
         "tier": tier,
         "is_admin": hub_data.get("is_admin", False)
-    }
+    })
+    resp.set_cookie(key="apollo_api_key", value=api_key, httponly=True, samesite="strict")
+    return resp
 
 
 @app.post("/api/v2/logout")
@@ -683,7 +719,9 @@ async def logout():
     global _active_api_key
     _active_api_key = HUB_API_KEY
     logger.info("[AUTH] Logout — active API key reset to .env default")
-    return {"status": "ok"}
+    resp = JSONResponse(content={"status": "ok"})
+    resp.delete_cookie(key="apollo_api_key")
+    return resp
 
 
 # ============================================================================
