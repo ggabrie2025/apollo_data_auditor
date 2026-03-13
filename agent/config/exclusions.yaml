@@ -145,6 +145,16 @@ files:
     - "*/$Recycle.Bin/*"
     - "*/System Volume Information/*"
 
+    # Cloud sync folders (avoid double-counting with CLOUD scan)
+    # These are local mirrors of cloud storage — scanned via API instead
+    - "*/OneDrive/*"
+    - "*/OneDrive - */*"
+    - "*/SharePoint/*"
+    - "*/Dropbox/*"
+    - "*/Google Drive/*"
+    - "*/iCloud Drive/*"
+    - "*/.sync/*"
+
   # Size limits
   size:
     # Skip files larger than this (MB) - usually binaries or media
