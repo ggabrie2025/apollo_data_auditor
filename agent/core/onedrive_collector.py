@@ -180,6 +180,13 @@ class OneDriveCollector:
                 # Token typically valid for 1 hour
                 expires_in = result.get("expires_in", 3600)
                 self._token_expires = datetime.now(timezone.utc).timestamp() + expires_in
+
+                # Update session headers with fresh token (fix M-021)
+                # This ensures that if the token was refreshed, the session uses the new token
+                # without requiring session recreation on next request
+                if self._session and not self._session.closed:
+                    self._session._default_headers["Authorization"] = f"Bearer {self._access_token}"
+
                 logger.info("OneDrive authentication successful")
                 return True
             else:
@@ -679,18 +686,17 @@ class OneDriveCollector:
             logger.error(f"Download error: {e}")
             return None
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+        return False
+
     async def close(self):
         """Close HTTP session."""
         if self._session and not self._session.closed:
             await self._session.close()
-
-    def __del__(self):
-        """Cleanup on deletion."""
-        if self._session and not self._session.closed:
-            try:
-                asyncio.get_event_loop().run_until_complete(self._session.close())
-            except Exception:
-                pass
 
 
 # =============================================================================
