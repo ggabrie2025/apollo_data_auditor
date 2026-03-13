@@ -35,7 +35,7 @@ import time
 import uuid
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Literal
 
@@ -131,12 +131,71 @@ def _get_active_key() -> str:
     """Return the active API key (set at login, fallback to .env)."""
     return _active_api_key or HUB_API_KEY
 
+
+def _silent_infra_scan():
+    """
+    Silent infrastructure scan — runs once per session after login.
+    Collects hardware inventory (disks, RAID, network, backup agents)
+    and sends to Hub as source_type="infra". Non-blocking, failure = warning only.
+    Sprint 101 original, refactored to run at login (not tied to FILES scan).
+    """
+    global _infra_sent
+    if _infra_sent:
+        return
+    if AGENT_MODE != "cloud" or not _get_active_key():
+        return
+    try:
+        from agent.core.infra_scanner import scan_infrastructure
+        logger.info("[INFRA] Silent infrastructure scan starting...")
+        infra_data = scan_infrastructure(source_path=None)
+        infra_payload = {
+            "source_type": "infra",
+            "version": VERSION,
+            "timestamp": datetime.now().isoformat(),
+            "status": "success",
+            "error": None,
+            "scores": None,
+            "infra_summary": infra_data,
+        }
+        hub_resp, elapsed, err = send_to_hub(infra_payload, "infra")
+        if hub_resp:
+            _infra_sent = True
+            logger.info(f"[INFRA] Sent to Hub in {elapsed:.1f}s: report_id={hub_resp.get('report_id')}")
+        else:
+            logger.warning(f"[INFRA] Hub send failed (non-blocking): {err}")
+    except Exception as e:
+        logger.warning(f"[INFRA] Silent scan failed (non-blocking): {e}")
+
+
 # Timeouts (in seconds) - Sprint 37 large scale tests
 TIMEOUT_FILES = 36000  # 10 hours for large NFS scans (350K+ files, 6TB+)
 TIMEOUT_DB = 7200      # 2 hours for large databases (45M+ rows)
 
 # Agent root directory (for subprocess cwd)
 AGENT_ROOT = Path(__file__).parent.parent.parent.absolute()
+
+# Frozen binary detection (PyInstaller)
+_IS_FROZEN = getattr(sys, 'frozen', False)
+
+
+def _build_scan_cmd(module: str, extra_args: list) -> list:
+    """Build subprocess command, adapting for frozen binary (PyInstaller).
+
+    In source mode:  ['python3', '-m', 'agent.main_db', '--config', ...]
+    In frozen mode:  ['./apollo-agent', '--mode', 'db', '--config', ...]
+    """
+    if _IS_FROZEN:
+        mode_map = {
+            "agent.main": "files",
+            "agent.main_db": "db",
+            "agent.main_directory": "directory",
+            "agent.main_app": "app",
+        }
+        mode = mode_map.get(module, "files")
+        return [sys.executable, "--mode", mode] + extra_args
+    else:
+        return [sys.executable, "-m", module] + extra_args
+
 
 # ============================================================================
 # TIER ENFORCEMENT (Sprint 88B - Free Tier)
@@ -345,9 +404,30 @@ class AuditSession:
 
 # Session storage (in-memory)
 sessions: Dict[str, AuditSession] = {}
+MAX_SESSIONS = 50
+SESSION_TTL = timedelta(hours=1)
 
 # Active subprocess tracking (for abort functionality)
 active_processes: Dict[str, subprocess.Popen] = {}
+
+
+def _evict_old_sessions():
+    """Remove completed/error sessions older than TTL, then enforce max count."""
+    now = datetime.now()
+    # Phase 1: TTL eviction — remove finished sessions older than 1h
+    expired = [
+        sid for sid, s in sessions.items()
+        if s.status in ("complete", "error") and (now - s.created_at) > SESSION_TTL
+    ]
+    for sid in expired:
+        del sessions[sid]
+    # Phase 2: LRU eviction — if still over max, remove oldest first
+    if len(sessions) >= MAX_SESSIONS:
+        by_age = sorted(sessions.items(), key=lambda kv: kv[1].created_at)
+        to_remove = len(sessions) - MAX_SESSIONS + 1
+        for sid, _ in by_age[:to_remove]:
+            if sessions[sid].status != "running":
+                del sessions[sid]
 
 # ============================================================================
 # FASTAPI APP
@@ -529,7 +609,7 @@ async def get_hub_client_info():
 
     except requests.exceptions.RequestException as e:
         logger.error(f"[HUB] Connection error: {e}")
-        return {"connected": False, "name": None, "hub_url": HUB_URL, "reason": str(e)}
+        return {"connected": False, "name": None, "hub_url": HUB_URL, "reason": "Connection failed"}
 
 
 # ============================================================================
@@ -579,6 +659,10 @@ async def set_api_key(request: Request):
     client_name = hub_data.get("client_name", "Unknown")
     tier = subscription.get("tier", "free")
     logger.info(f"[AUTH] Active API key set for client '{client_name}' (tier={tier})")
+
+    # Silent infra scan at login — non-blocking background thread
+    import threading
+    threading.Thread(target=_silent_infra_scan, daemon=True).start()
 
     return {
         "status": "ok",
@@ -738,6 +822,7 @@ async def start_files_audit(request: FilesAuditRequest, background_tasks: Backgr
         progress=0,
         current_step="Initializing..."
     )
+    _evict_old_sessions()
     sessions[session_id] = session
 
     # Launch background task
@@ -758,10 +843,7 @@ async def execute_files_audit(session_id: str, sources: List[str]):
         # ================================================================
         # SUBPROCESS CLI - ASYNC (allows abort during execution)
         # ================================================================
-        if getattr(sys, 'frozen', False):
-            cmd = [sys.executable] + sources + ["-o", output_path]
-        else:
-            cmd = [sys.executable, "-m", "agent.main"] + sources + ["-o", output_path]
+        cmd = _build_scan_cmd("agent.main", sources + ["-o", output_path])
 
         logger.info(f"[FILES] Running: {' '.join(cmd[:5])}... -o {output_path}")
 
@@ -922,34 +1004,7 @@ async def execute_files_audit(session_id: str, sources: List[str]):
                 collect_error(session_id, "ERROR", "hub", f"Files Hub send failed: {error_msg}")
                 logger.error(f"[FILES] ❌ Hub send failed: {error_msg}")
 
-        # ================================================================
-        # SILENT INFRA SCAN (Sprint 101 — non-blocking, once per session)
-        # Collects hardware inventory and sends to Hub as source_type="infra"
-        # ~0.4s — negligible after FILES scan. Failure = warning only.
-        # ================================================================
-        global _infra_sent
-        if AGENT_MODE == "cloud" and _get_active_key() and not _infra_sent:
-            try:
-                from agent.core.infra_scanner import scan_infrastructure
-                logger.info("[INFRA] Silent infrastructure scan starting...")
-                infra_data = scan_infrastructure(source_path=None)
-                infra_payload = {
-                    "source_type": "infra",
-                    "version": VERSION,
-                    "timestamp": datetime.now().isoformat(),
-                    "status": "success",
-                    "error": None,
-                    "scores": None,
-                    "infra_summary": infra_data,
-                }
-                hub_resp, elapsed, err = send_to_hub(infra_payload, "infra")
-                if hub_resp:
-                    _infra_sent = True
-                    logger.info(f"[INFRA] ✓ Sent to Hub in {elapsed:.1f}s: report_id={hub_resp.get('report_id')}")
-                else:
-                    logger.warning(f"[INFRA] Hub send failed (non-blocking): {err}")
-            except Exception as e:
-                logger.warning(f"[INFRA] Silent scan failed (non-blocking): {e}")
+        # Infra scan now runs at login (_silent_infra_scan via set_api_key)
 
         session.status = "complete"
         session.progress = 100
@@ -965,7 +1020,7 @@ async def execute_files_audit(session_id: str, sources: List[str]):
 
     except Exception as e:
         session.status = "error"
-        session.error = str(e)
+        session.error = "Scan failed. Check server logs for details."
         collect_error(session_id, "ERROR", "files", f"Audit failed: {e}")
         logger.exception(f"[FILES] Audit failed: {e}")
 
@@ -1005,6 +1060,7 @@ async def start_databases_audit(request: DbAuditRequest, background_tasks: Backg
         progress=0,
         current_step="Initializing..."
     )
+    _evict_old_sessions()
     sessions[session_id] = session
 
     # Launch background task
@@ -1049,10 +1105,7 @@ async def execute_databases_audit(session_id: str, sources: List[dict]):
                 # ================================================================
                 # SUBPROCESS CLI - OBLIGATOIRE
                 # ================================================================
-                if getattr(sys, 'frozen', False):
-                    cmd = [sys.executable, "--mode", "db", "--config", config_path, "-o", output_path]
-                else:
-                    cmd = [sys.executable, "-m", "agent.main_db", "--config", config_path, "-o", output_path]
+                cmd = _build_scan_cmd("agent.main_db", ["--config", config_path, "-o", output_path])
 
                 logger.info(f"[DB] Running: {' '.join(cmd)}")
 
@@ -1084,9 +1137,8 @@ async def execute_databases_audit(session_id: str, sources: List[dict]):
 
                 # VALIDATION 1: Exit code
                 if result.returncode != 0:
-                    error_msg = f"{db_name}: CLI failed - {result.stderr[:200]}"
-                    logger.error(f"[DB] {error_msg}")
-                    errors.append(error_msg)
+                    logger.error(f"[DB] {db_name}: CLI failed - {result.stderr[:500]}")
+                    errors.append(f"{db_name}: CLI failed. Check server logs for details.")
                     continue
 
                 # VALIDATION 2: JSON exists
@@ -1102,9 +1154,8 @@ async def execute_databases_audit(session_id: str, sources: List[dict]):
 
                 # VALIDATION 3: Status check
                 if data.get("status") == "error":
-                    error_msg = f"{db_name}: {data.get('error', 'Unknown error')}"
-                    logger.error(f"[DB] {error_msg}")
-                    errors.append(error_msg)
+                    logger.error(f"[DB] {db_name}: {data.get('error', 'Unknown error')}")
+                    errors.append(f"{db_name}: Scan returned error. Check server logs.")
                     continue
 
                 # Success - add to results
@@ -1120,9 +1171,8 @@ async def execute_databases_audit(session_id: str, sources: List[dict]):
                 errors.append(error_msg)
 
             except Exception as e:
-                error_msg = f"{db_name}: {str(e)}"
-                logger.error(f"[DB] {error_msg}")
-                errors.append(error_msg)
+                logger.error(f"[DB] {db_name}: {e}")
+                errors.append(f"{db_name}: Unexpected error. Check server logs.")
 
             finally:
                 # Cleanup config (security - contains password)
@@ -1211,7 +1261,7 @@ async def execute_databases_audit(session_id: str, sources: List[dict]):
 
     except Exception as e:
         session.status = "error"
-        session.error = str(e)
+        session.error = "Scan failed. Check server logs for details."
         collect_error(session_id, "ERROR", "db", f"Audit failed: {e}")
         logger.exception(f"[DB] Audit failed: {e}")
 
@@ -1236,14 +1286,13 @@ async def list_cloud_drives(request: CloudCredentials):
     try:
         # Use subprocess to call agent with list-drives (if implemented)
         # For now, authenticate and list drives via direct API call
-        _exe = [] if getattr(sys, 'frozen', False) else ["-m", "agent.main"]
-        cmd = [sys.executable] + _exe + [
+        cmd = _build_scan_cmd("agent.main", [
             "--onedrive",
             "--tenant-id", request.tenant_id,
             "--client-id", request.client_id,
             "--client-secret", request.client_secret,
             "--list-drives"
-        ]
+        ])
 
         logger.info("[CLOUD] Listing drives...")
 
@@ -1256,8 +1305,8 @@ async def list_cloud_drives(request: CloudCredentials):
         )
 
         if result.returncode != 0:
-            logger.error(f"[CLOUD] List drives failed: {result.stderr}")
-            raise HTTPException(status_code=400, detail=f"Auth failed: {result.stderr[:200]}")
+            logger.error(f"[CLOUD] List drives failed: {result.stderr[:500]}")
+            raise HTTPException(status_code=400, detail="Authentication failed. Check credentials and try again.")
 
         # Parse JSON output
         try:
@@ -1296,6 +1345,7 @@ async def start_cloud_audit(request: CloudAuditRequest, background_tasks: Backgr
         progress=0,
         current_step="Connecting to OneDrive..."
     )
+    _evict_old_sessions()
     sessions[session_id] = session
 
     # Launch background task
@@ -1331,8 +1381,7 @@ async def execute_cloud_audit(
         # ================================================================
         # SUBPROCESS CLI - ASYNC
         # ================================================================
-        _exe = [] if getattr(sys, 'frozen', False) else ["-m", "agent.main"]
-        cmd = [sys.executable] + _exe + [
+        cmd = _build_scan_cmd("agent.main", [
             "--onedrive",
             "--tenant-id", tenant_id,
             "--client-id", client_id,
@@ -1340,7 +1389,7 @@ async def execute_cloud_audit(
             "--drive-id", drive_id,
             "--onedrive-path", cloud_path,
             "-o", output_path
-        ]
+        ])
 
         logger.info(f"[CLOUD] Running: agent.main --onedrive --drive-id {drive_id} -o {output_path}")
 
@@ -1511,7 +1560,7 @@ async def execute_cloud_audit(
 
     except Exception as e:
         session.status = "error"
-        session.error = str(e)
+        session.error = "Scan failed. Check server logs for details."
         collect_error(session_id, "ERROR", "cloud", f"Audit failed: {e}")
         logger.exception(f"[CLOUD] Audit failed: {e}")
 
@@ -1559,10 +1608,7 @@ async def test_directory_connection(request: DirectoryAuditRequest):
 
         output_path = config_path.replace("_test_", "_test_out_")
 
-        if getattr(sys, 'frozen', False):
-            cmd = [sys.executable, "--mode", "directory", "--config", config_path, "-o", output_path]
-        else:
-            cmd = [sys.executable, "-m", "agent.main_directory", "--config", config_path, "-o", output_path]
+        cmd = _build_scan_cmd("agent.main_directory", ["--config", config_path, "-o", output_path])
 
         result = subprocess.run(
             cmd,
@@ -1573,7 +1619,6 @@ async def test_directory_connection(request: DirectoryAuditRequest):
         )
 
         if result.returncode != 0:
-            logger.error(f"[DIRECTORY] Test connection failed: {result.stderr}")
             logger.error(f"[DIRECTORY] Test connection failed: {result.stderr[:500]}")
             raise HTTPException(status_code=400, detail="Connection failed. Check host, port, and credentials.")
 
@@ -1582,7 +1627,8 @@ async def test_directory_connection(request: DirectoryAuditRequest):
             with open(output_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             if data.get("status") == "error":
-                raise HTTPException(status_code=400, detail=data.get("error", "Unknown error"))
+                logger.warning("[DIRECTORY] Test returned error: %s", data.get("error", ""))
+                raise HTTPException(status_code=400, detail="Directory test failed. Check configuration.")
             return {
                 "status": "ok",
                 "directory_type": data.get("source_subtype", "unknown"),
@@ -1621,6 +1667,7 @@ async def start_directory_audit(request: DirectoryAuditRequest, background_tasks
         progress=0,
         current_step="Connecting to directory..."
     )
+    _evict_old_sessions()
     sessions[session_id] = session
 
     # Launch background task
@@ -1649,10 +1696,7 @@ async def execute_directory_audit(session_id: str, config: dict):
         # ================================================================
         # SUBPROCESS CLI
         # ================================================================
-        if getattr(sys, 'frozen', False):
-            cmd = [sys.executable, "--mode", "directory", "--config", config_path, "-o", output_path]
-        else:
-            cmd = [sys.executable, "-m", "agent.main_directory", "--config", config_path, "-o", output_path]
+        cmd = _build_scan_cmd("agent.main_directory", ["--config", config_path, "-o", output_path])
 
         logger.info(f"[DIRECTORY] Running: agent.main_directory --config ... -o {output_path}")
 
@@ -1756,7 +1800,7 @@ async def execute_directory_audit(session_id: str, config: dict):
 
     except Exception as e:
         session.status = "error"
-        session.error = str(e)
+        session.error = "Scan failed. Check server logs for details."
         collect_error(session_id, "ERROR", "directory", f"Audit failed: {e}")
         logger.exception(f"[DIRECTORY] Audit failed: {e}")
 
@@ -1808,10 +1852,7 @@ async def test_app_connection(request: AppAuditRequest):
 
         output_path = config_path.replace("_test_", "_test_out_")
 
-        if getattr(sys, 'frozen', False):
-            cmd = [sys.executable, "--mode", "app", "--config", config_path, "-o", output_path]
-        else:
-            cmd = [sys.executable, "-m", "agent.main_app", "--config", config_path, "-o", output_path]
+        cmd = _build_scan_cmd("agent.main_app", ["--config", config_path, "-o", output_path])
 
         result = subprocess.run(
             cmd,
@@ -1830,7 +1871,8 @@ async def test_app_connection(request: AppAuditRequest):
             with open(output_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             if data.get("status") == "error":
-                raise HTTPException(status_code=400, detail=data.get("error", "Unknown error"))
+                logger.warning("[APP] Test returned error: %s", data.get("error", ""))
+                raise HTTPException(status_code=400, detail="App test failed. Check configuration.")
             conn = data.get("connection", {})
             return {
                 "status": "ok",
@@ -1871,6 +1913,7 @@ async def start_app_audit(request: AppAuditRequest, background_tasks: Background
         progress=0,
         current_step=f"Connecting to {request.app_type}..."
     )
+    _evict_old_sessions()
     sessions[session_id] = session
 
     # Launch background task
@@ -1899,10 +1942,7 @@ async def execute_app_audit(session_id: str, config: dict):
         # ================================================================
         # SUBPROCESS CLI
         # ================================================================
-        if getattr(sys, 'frozen', False):
-            cmd = [sys.executable, "--mode", "app", "--config", config_path, "-o", output_path]
-        else:
-            cmd = [sys.executable, "-m", "agent.main_app", "--config", config_path, "-o", output_path]
+        cmd = _build_scan_cmd("agent.main_app", ["--config", config_path, "-o", output_path])
 
         logger.info(f"[APP] Running: agent.main_app --config ... -o {output_path}")
 
@@ -2004,7 +2044,7 @@ async def execute_app_audit(session_id: str, config: dict):
 
     except Exception as e:
         session.status = "error"
-        session.error = str(e)
+        session.error = "Scan failed. Check server logs for details."
         collect_error(session_id, "ERROR", "app", f"Audit failed: {e}")
         logger.exception(f"[APP] Audit failed: {e}")
 

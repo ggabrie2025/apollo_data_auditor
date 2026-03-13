@@ -167,7 +167,7 @@
             <button onclick="window.location.href='/static/en/index.html'">EN</button>
         </div>
         <h1>APOLLO<sup>&trade;</sup> DATA AUDITOR - Agent Cloud V1.7.R</h1>
-        <p class="subtitle">Scan FILES &amp; DATABASES - Send to Hub for Scoring</p>
+        <p class="subtitle">Scan your data - Send to Hub for Scoring</p>
     </header>
 
     <!-- Tab Navigation - Sprint 87 -->
@@ -640,8 +640,20 @@
     <script src="/static/api.js"></script>
     <script src="/static/app.js?v=94c"></script>
     <script>
-        // Require authentication on load
-        AUTH.requireAuth();
+        // Require authentication on load — re-sync key with server after restart
+        (async function() {
+            const storedKey = AUTH.getApiKey();
+            if (!storedKey) {
+                window.location.href = '/static/login.html';
+                return;
+            }
+            // Re-validate stored key with server (handles server restart)
+            const valid = await AUTH.validateApiKey(storedKey);
+            if (!valid) {
+                AUTH.clearApiKey();
+                window.location.href = '/static/login.html';
+            }
+        })();
 
         // Logout function
         function logout() {

@@ -1,20 +1,20 @@
 # =============================================================================
-# Apollo Agent V1.7.R - Install Script (Windows)
+# Apollo Agent V1.7.R - Install Script (Windows) — UI-Friendly
 # =============================================================================
 #
 # Usage:
 #     # Option A — one-liner (PowerShell)
 #     Invoke-WebRequest https://aiia-tech.com/download/install_windows.ps1 -OutFile install.ps1
-#     .\install.ps1 -ApiKey YOUR_KEY
+#     .\install.ps1
 #
-#     # Option B — avec elevation (C:\Program Files\)
-#     .\install.ps1 -ApiKey YOUR_KEY -System
+#     # Option B — with API key
+#     .\install.ps1 -ApiKey YOUR_KEY
 #
 # Si ExecutionPolicy bloque le script :
 #     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 #
-# SmartScreen warning : clic droit sur apollo-agent.exe → Proprietes → Debloquer
-# Ou : lancer le .exe → "More info" → "Run anyway"
+# NO admin rights required — installs to %LOCALAPPDATA%\ApolloAgent\
+# After install, auto-launches the UI agent and opens browser.
 #
 # Binaires officiels distribues exclusivement via aiia-tech.com
 #
@@ -24,21 +24,16 @@
 param(
     [string]$ApiKey    = "",
     [string]$HubUrl    = "https://apollo-cloud-api-production.up.railway.app",
-    [switch]$System    = $false,   # Installer dans C:\Program Files\ (UAC requis)
-    [switch]$NoVerify  = $false
+    [switch]$NoVerify  = $false,
+    [switch]$NoLaunch  = $false
 )
 
 $DownloadBase = "https://aiia-tech.com/download"
 $BinaryName   = "apollo-agent.exe"
 
-# Installation path
-if ($System) {
-    $InstallDir = "C:\Program Files\ApolloAgent"
-} else {
-    $InstallDir = "$env:LOCALAPPDATA\ApolloAgent"
-}
-
-$ConfigDir = "$env:APPDATA\Apollo"
+# Install to user directory (NO admin required)
+$InstallDir = "$env:LOCALAPPDATA\ApolloAgent"
+$ConfigDir  = "$env:APPDATA\Apollo"
 $InstallBin = "$InstallDir\apollo-agent.exe"
 
 Write-Host ""
@@ -51,22 +46,11 @@ if ($env:OS -ne "Windows_NT") {
     exit 1
 }
 
-# Elevation check for --system
-if ($System) {
-    $currentPrincipal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
-    $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    if (-not $isAdmin) {
-        Write-Host "Error: --System requires Administrator privileges." -ForegroundColor Red
-        Write-Host "Relancer PowerShell en tant qu'Administrateur, ou utiliser sans -System." -ForegroundColor Yellow
-        exit 1
-    }
-}
-
 $TmpBin  = "$env:TEMP\apollo-agent.exe"
 $TmpSums = "$env:TEMP\SHA256SUMS.txt"
 
 # Download binary
-Write-Host "Downloading $BinaryName from aiia-tech.com..."
+Write-Host "  Downloading $BinaryName from aiia-tech.com..."
 try {
     Invoke-WebRequest "$DownloadBase/$BinaryName" -OutFile $TmpBin -UseBasicParsing
 } catch {
@@ -76,10 +60,10 @@ try {
 
 # SHA256 verification
 if ($NoVerify) {
-    Write-Host "Warning: Integrity check skipped (-NoVerify). NOT recommended." -ForegroundColor Yellow
+    Write-Host "  Warning: Integrity check skipped (-NoVerify). NOT recommended." -ForegroundColor Yellow
 } else {
     Write-Host ""
-    Write-Host "Verifying binary integrity..."
+    Write-Host "  Verifying binary integrity..."
     try {
         Invoke-WebRequest "$DownloadBase/SHA256SUMS.txt" -OutFile $TmpSums -UseBasicParsing
     } catch {
@@ -113,31 +97,25 @@ if ($NoVerify) {
         exit 1
     }
 
-    Write-Host "Integrity check passed (SHA256 OK)" -ForegroundColor Green
+    Write-Host "  Integrity check passed (SHA256 OK)" -ForegroundColor Green
 }
 
-# SmartScreen warning
+# Install to user directory
 Write-Host ""
-Write-Host "Note SmartScreen:" -ForegroundColor Yellow
-Write-Host "  Si Windows bloque l'execution : clic droit sur apollo-agent.exe"
-Write-Host "  → Proprietes → Debloquer"
-Write-Host "  Ou au premier lancement : 'More info' → 'Run anyway'"
-Write-Host ""
-
-# Install
-Write-Host "Installing to $InstallDir..."
+Write-Host "  Installing to $InstallDir..."
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Copy-Item $TmpBin $InstallBin -Force
 
 # Unblock downloaded file (removes NTFS Zone.Identifier alternate data stream)
 Unblock-File $InstallBin
 
-# Add to PATH (user scope, or system scope if --system)
-$PathScope = if ($System) { "Machine" } else { "User" }
-$CurrentPath = [Environment]::GetEnvironmentVariable("Path", $PathScope)
+# Add to PATH (user scope only, no admin needed)
+$CurrentPath = [Environment]::GetEnvironmentVariable("Path", "User")
 if ($CurrentPath -notlike "*ApolloAgent*") {
-    [Environment]::SetEnvironmentVariable("Path", "$CurrentPath;$InstallDir", $PathScope)
-    Write-Host "PATH mis a jour ($PathScope). Relancer PowerShell pour prendre effet."
+    [Environment]::SetEnvironmentVariable("Path", "$CurrentPath;$InstallDir", "User")
+    # Also update current session
+    $env:Path = "$env:Path;$InstallDir"
+    Write-Host "  PATH updated (User scope)" -ForegroundColor Green
 }
 
 # Write config
@@ -156,26 +134,45 @@ if ($ApiKey -ne "") {
     )
     $Acl.SetAccessRule($Rule)
     Set-Acl "$ConfigDir\config.json" $Acl
-    Write-Host "Config written to $ConfigDir\config.json"
+    Write-Host "  Config written to $ConfigDir\config.json"
 }
 
-# Cleanup
+# Cleanup temp files
 Remove-Item $TmpBin -ErrorAction SilentlyContinue
 Remove-Item $TmpSums -ErrorAction SilentlyContinue
 
 Write-Host ""
 Write-Host "=== Installation complete ===" -ForegroundColor Green
 Write-Host ""
-Write-Host "Apollo Agent installed at $InstallBin"
+Write-Host "  Apollo Agent installed at $InstallBin"
 Write-Host ""
-Write-Host "Quick start (apres avoir relance PowerShell) :"
-Write-Host "  apollo-agent --version"
-Write-Host "  apollo-agent --serve          # UI on http://localhost:8052"
-Write-Host "  apollo-agent C:\path\to\scan  # CLI scan"
-Write-Host ""
-if ($ApiKey -eq "") {
-    Write-Host "Note: No API key configured. Edit $ConfigDir\config.json" -ForegroundColor Yellow
+
+# Auto-launch UI agent + open browser (unless -NoLaunch)
+if (-not $NoLaunch) {
+    Write-Host "  Launching Apollo Agent UI..." -ForegroundColor Cyan
     Write-Host ""
+
+    # Launch the agent in serve mode (it auto-opens browser to login.html)
+    # The agent finds a free port (8052-8099) and opens the browser automatically
+    Start-Process -FilePath $InstallBin -ArgumentList "--serve" -WindowStyle Hidden
+
+    Write-Host "  Agent launched in background."
+    Write-Host ""
+    Write-Host "  Your browser should open automatically."
+    Write-Host "  If not, open: http://localhost:8052"
+    Write-Host ""
+    if ($ApiKey -eq "") {
+        Write-Host "  Enter your API key in the login page to start scanning." -ForegroundColor Yellow
+        Write-Host "  No key yet? Request beta access at https://aiia-tech.com"
+    }
+    Write-Host ""
+    Write-Host "  To relaunch later: apollo-agent --serve"
+} else {
+    Write-Host "  To launch the UI: apollo-agent --serve"
+    Write-Host "  (opens browser automatically)"
 }
-Write-Host "Documentation: https://aiia-tech.com"
-Write-Host "Support: contact@aiia-tech.com"
+
+Write-Host ""
+Write-Host "  Documentation: https://aiia-tech.com"
+Write-Host "  Support: contact@aiia-tech.com"
+Write-Host ""

@@ -13,6 +13,7 @@
 ### Fixed
 - Frozen binary subprocess routing via `--mode` flag (PyInstaller)
 - Complete frozen binary fix for FILES + OneDrive + asyncpg connectors
+- Infrastructure scan now runs automatically at login (was only triggered after FILES scan)
 
 ### Changed
 - macOS installer: native arm64 (Apple Silicon) — removed Rosetta 2 requirement
