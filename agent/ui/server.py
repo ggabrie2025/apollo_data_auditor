@@ -1625,67 +1625,46 @@ TIMEOUT_DIRECTORY = 300  # 5 minutes for LDAP queries
 @app.post("/api/v2/directory/test")
 async def test_directory_connection(request: DirectoryAuditRequest):
     """
-    Test LDAP/AD connection without full audit.
+    Test LDAP/AD connection (in-process, bounded size_limit=1).
 
-    Returns: {"status": "ok", "directory_type": "ad"|"openldap"} or error.
+    Returns: {"status": "ok", "directory_type": "ad"|"ldap"} or error.
     """
-    config_path = os.path.join(tempfile.gettempdir(), f"apollo_dir_test_{uuid.uuid4()}.json")
+    from agent.core.directory_connectors import LDAPConnector
 
+    config = {
+        "host": request.host,
+        "port": request.port,
+        "bind_dn": request.bind_dn,
+        "bind_password": request.bind_password,
+        "base_dn": request.base_dn,
+        "use_ssl": request.use_ssl,
+        "timeout": 10,
+    }
+
+    connector = None
     try:
-        config = {
-            "host": request.host,
-            "port": request.port,
-            "bind_dn": request.bind_dn,
-            "bind_password": request.bind_password,
-            "base_dn": request.base_dn,
-            "use_ssl": request.use_ssl,
-        }
-
-        # Write temp config (owner-only permissions)
-        _write_secure_temp(config_path, json.dumps(config))
-
-        output_path = config_path.replace("_test_", "_test_out_")
-
-        cmd = _build_scan_cmd("agent.main_directory", ["--config", config_path, "-o", output_path])
-
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=30,
-            cwd=str(AGENT_ROOT)
-        )
-
-        if result.returncode != 0:
-            logger.error(f"[DIRECTORY] Test connection failed: {result.stderr[:500]}")
-            raise HTTPException(status_code=400, detail="Connection failed. Check host, port, and credentials.")
-
-        # Read result to get directory type
-        if os.path.exists(output_path):
-            with open(output_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            if data.get("status") == "error":
-                logger.warning("[DIRECTORY] Test returned error: %s", data.get("error", ""))
-                raise HTTPException(status_code=400, detail="Directory test failed. Check configuration.")
-            return {
-                "status": "ok",
-                "directory_type": data.get("source_subtype", "unknown"),
-                "users_count": data.get("users_summary", {}).get("total_users", 0),
-            }
-        else:
-            raise HTTPException(status_code=500, detail="No output from test")
-
-    except subprocess.TimeoutExpired:
-        raise HTTPException(status_code=504, detail="Connection timeout (30s)")
-    except HTTPException:
-        raise
+        connector = LDAPConnector(config)
+        result = await asyncio.wait_for(connector.test_connection(), timeout=15.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Connection timeout (15s)")
     except Exception as e:
-        logger.error(f"[DIRECTORY] Test error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"[DIRECTORY] Test connection error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
-        for p in [config_path, config_path.replace("_test_", "_test_out_")]:
-            if os.path.exists(p):
-                os.remove(p)
+        if connector:
+            try:
+                await connector.disconnect()
+            except Exception:
+                pass
+
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Connection failed"))
+
+    return {
+        "status": "ok",
+        "directory_type": result.get("directory_type", "unknown"),
+        "message": f"Connected to {result.get('directory_type', 'directory')} at {request.host}:{request.port}",
+    }
 
 
 @app.post("/api/v2/directory/audit")

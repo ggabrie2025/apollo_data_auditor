@@ -163,6 +163,7 @@ class LDAPConnector(DirectoryConnector):
             entries = self._search(
                 "(objectClass=inetOrgPerson)" if not self._is_ad else "(objectClass=user)",
                 ["uid" if not self._is_ad else "sAMAccountName"],
+                size_limit=1,
             )
             return {
                 "success": True,
