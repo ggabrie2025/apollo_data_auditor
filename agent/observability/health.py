@@ -19,6 +19,7 @@ import platform
 from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
+from agent.version import VERSION  # Single source of truth
 
 
 @dataclass
@@ -86,23 +87,8 @@ _current_scan_files: int = 0
 
 
 def get_agent_version() -> str:
-    """Get agent version from main module."""
-    try:
-        # Try to import from agent module
-        from agent.main import VERSION
-        return VERSION
-    except ImportError:
-        pass
-
-    try:
-        # Try relative import
-        from main import VERSION
-        return VERSION
-    except ImportError:
-        pass
-
-    # Fallback
-    return "unknown"
+    """Get agent version (from agent.version — single source of truth)."""
+    return VERSION
 
 
 def get_health_status() -> HealthStatus:

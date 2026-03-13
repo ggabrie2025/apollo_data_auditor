@@ -468,15 +468,16 @@ PII_PATTERNS: Dict[str, re.Pattern] = {
     ),
 
     # --- GENDER (Genre - Moins sensible mais important) ---
+    # Contextual pattern: label + separator + value (fix M-015: man/woman/male/female too generic)
     "gender": re.compile(
-        r'\b('
-        # FR
-        r'genre|sexe|masculin|feminin|homme|femme|'
-        # EN
-        r'gender|sex|male|female|man|woman|'
-        # Non-binary (already in sexual_orientation but useful here too)
-        r'non.binaire|non.binary|genderqueer|agender|bigender'
-        r')\b',
+        r'(?:'
+        # Structured label:value — "Gender: Male", "Sexe: F", "genre = homme"
+        r'(?:gender|sex|sexe|genre)\s*[:=]\s*'
+        r'(?:male|female|homme|femme|masculin|feminin|man|woman|m|f|other|autre)\b'
+        r'|'
+        # Non-binary terms (specific enough, no context needed)
+        r'\b(?:non.binaire|non.binary|genderqueer|agender|bigender)\b'
+        r')',
         re.IGNORECASE
     ),
 
@@ -564,12 +565,12 @@ PII_PATTERNS: Dict[str, re.Pattern] = {
         re.IGNORECASE
     ),
 
-    # --- BANK ROUTING (US ABA/ACH) ---
+    # --- BANK ROUTING (US ABA/ACH) — contextual (fix M-016) ---
     "bank_routing_us": re.compile(
-        r'\b('
-        # ABA routing number: 9 digits with specific first 2 digit ranges
-        r'0[1-9]\d{7}|[1-2]\d{8}|3[0-2]\d{7}'
-        r')\b'
+        r'(?:routing|ABA|ACH|wire\s*transfer|bank\s*(?:code|number))'
+        r'\s*[:=\s#]\s*'
+        r'(0[1-9]\d{7}|[1-2]\d{8}|3[0-2]\d{7})\b',
+        re.IGNORECASE
     ),
 
     # ==========================================================================
@@ -1039,13 +1040,14 @@ PII_PATTERNS_BYTES = {
         re.IGNORECASE
     ),
 
-    # --- GENDER ---
+    # --- GENDER (contextual pattern, fix M-015) ---
     'gender': re.compile(
-        rb'\b('
-        rb'genre|sexe|masculin|feminin|homme|femme|'
-        rb'gender|sex|male|female|man|woman|'
-        rb'non.binaire|non.binary|genderqueer|agender|bigender'
-        rb')\b',
+        rb'(?:'
+        rb'(?:gender|sex|sexe|genre)\s*[:=]\s*'
+        rb'(?:male|female|homme|femme|masculin|feminin|man|woman|m|f|other|autre)\b'
+        rb'|'
+        rb'\b(?:non.binaire|non.binary|genderqueer|agender|bigender)\b'
+        rb')',
         re.IGNORECASE
     ),
 
@@ -1112,11 +1114,12 @@ PII_PATTERNS_BYTES = {
         re.IGNORECASE
     ),
 
-    # --- US BANK ROUTING ---
+    # --- US BANK ROUTING — contextual (fix M-016) ---
     'bank_routing_us': re.compile(
-        rb'\b('
-        rb'0[1-9]\d{7}|[1-2]\d{8}|3[0-2]\d{7}'
-        rb')\b'
+        rb'(?:routing|ABA|ACH|wire\s*transfer|bank\s*(?:code|number))'
+        rb'\s*[:=\s#]\s*'
+        rb'(0[1-9]\d{7}|[1-2]\d{8}|3[0-2]\d{7})\b',
+        re.IGNORECASE
     ),
 
     # ==========================================================================

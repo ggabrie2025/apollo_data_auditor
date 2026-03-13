@@ -35,7 +35,7 @@ def create_table_fingerprint(table) -> TableFingerprint:
     """Create fingerprint for a table."""
     # Hash column names + types
     column_str = "|".join([f"{col['name']}:{col['type']}" for col in table.columns])
-    column_hash = hashlib.md5(column_str.encode()).hexdigest()
+    column_hash = hashlib.sha256(column_str.encode()).hexdigest()[:32]
 
     return TableFingerprint(
         table_name=table.name,
@@ -98,4 +98,4 @@ def load_snapshot_from_hub(
 def get_source_id(db_type: str, host: str, database: str) -> str:
     """Generate unique source ID for a database."""
     source_str = f"{db_type}_{host}_{database}"
-    return hashlib.md5(source_str.encode()).hexdigest()[:16]
+    return hashlib.sha256(source_str.encode()).hexdigest()[:16]

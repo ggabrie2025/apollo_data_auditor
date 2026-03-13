@@ -63,7 +63,7 @@ def get_tables_to_scan(
             else:
                 # Check column hash
                 column_str = "|".join([f"{col['name']}:{col['type']}" for col in table.columns])
-                current_hash = hashlib.md5(column_str.encode()).hexdigest()
+                current_hash = hashlib.sha256(column_str.encode()).hexdigest()[:32]
 
                 if current_hash != prev_fp["column_hash"]:
                     modified_tables.append(table.name)

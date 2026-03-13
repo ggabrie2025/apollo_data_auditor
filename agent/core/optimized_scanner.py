@@ -186,12 +186,14 @@ PII_PATTERNS = {
         rb')\b',
         re.IGNORECASE
     ),
+    # Contextual pattern (fix M-015: man/woman/male/female too generic)
     'gender': re.compile(
-        rb'\b('
-        rb'genre|sexe|masculin|feminin|homme|femme|'
-        rb'gender|sex|male|female|man|woman|'
-        rb'non.binaire|non.binary|genderqueer|agender|bigender'
-        rb')\b',
+        rb'(?:'
+        rb'(?:gender|sex|sexe|genre)\s*[:=]\s*'
+        rb'(?:male|female|homme|femme|masculin|feminin|man|woman|m|f|other|autre)\b'
+        rb'|'
+        rb'\b(?:non.binaire|non.binary|genderqueer|agender|bigender)\b'
+        rb')',
         re.IGNORECASE
     ),
 
@@ -236,7 +238,12 @@ PII_PATTERNS = {
         rb')\b',
         re.IGNORECASE
     ),
-    'bank_routing_us': re.compile(rb'\b(0[1-9]\d{7}|[1-2]\d{8}|3[0-2]\d{7})\b'),
+    'bank_routing_us': re.compile(  # contextual (fix M-016)
+        rb'(?:routing|ABA|ACH|wire\s*transfer|bank\s*(?:code|number))'
+        rb'\s*[:=\s#]\s*'
+        rb'(0[1-9]\d{7}|[1-2]\d{8}|3[0-2]\d{7})\b',
+        re.IGNORECASE
+    ),
 
     # API KEYS & SECRETS - SECURITY RISK (V1.7.1)
     'api_key': re.compile(
@@ -330,21 +337,4 @@ def scan_pii_parallel(file_contents: Dict[str, bytes]) -> Dict[str, List]:
     pii_count = sum(1 for r in results.values() if r)
     logger.info(f"[CPU] Found PII in {pii_count}/{len(results)} files")
     return results
-
-# ============================================================================
-# INTEGRATION HELPER
-# ============================================================================
-
-def integrate_with_main_scanner(original_scan_func):
-    """Decorator to integrate optimized scanning with original flow"""
-    def wrapper(*args, **kwargs):
-        # Check if optimization is enabled
-        if os.getenv('OPTIMIZED_SCAN', '1') == '1':
-            logger.info("[OPT] Using optimized scan pipeline")
-            # Extract file_paths from args or kwargs
-            # This needs to be adapted based on original function signature
-            return original_scan_func(*args, **kwargs)
-        else:
-            return original_scan_func(*args, **kwargs)
-    return wrapper
 
