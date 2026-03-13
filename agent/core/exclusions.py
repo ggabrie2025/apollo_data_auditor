@@ -99,7 +99,8 @@ def _parse_config(raw: Dict[str, Any]) -> ExclusionsConfig:
 
 def should_exclude_file(
     file_meta: FileMetadata,
-    config: ExclusionsConfig
+    config: ExclusionsConfig,
+    compiled_patterns: Optional[list] = None
 ) -> tuple[bool, Optional[str]]:
     """
     Check if a file should be excluded.
@@ -133,14 +134,11 @@ def should_exclude_file(
         if fnmatch.fnmatch(normalized_path, normalized_pattern):
             return True, f"path pattern: {path_pattern}"
 
-    # Check filename patterns (regex)
-    for pattern_str in config.files.filename_patterns:
-        try:
-            pattern = re.compile(pattern_str)
-            if pattern.search(file_meta.name):
-                return True, f"filename pattern: {pattern_str}"
-        except re.error:
-            continue
+    # Check filename patterns (pre-compiled regex)
+    compiled = compiled_patterns or []
+    for pattern, pattern_str in compiled:
+        if pattern.search(file_meta.name):
+            return True, f"filename pattern: {pattern_str}"
 
     return False, None
 
@@ -162,8 +160,16 @@ def filter_files(
     included = []
     excluded = []
 
+    # Pre-compile regex patterns once (not per-file — fixes M-013)
+    compiled_patterns = []
+    for pattern_str in config.files.filename_patterns:
+        try:
+            compiled_patterns.append((re.compile(pattern_str), pattern_str))
+        except re.error:
+            continue
+
     for file_meta in files:
-        should_exclude, reason = should_exclude_file(file_meta, config)
+        should_exclude, reason = should_exclude_file(file_meta, config, compiled_patterns)
 
         if should_exclude:
             file_meta.excluded = True
