@@ -16,4 +16,11 @@ target/
 .DS_Store
 .venv/
 .pytest_cache/
-nuitka-crash-report.xml
+
+# Release binaries — exceptions
+!agent/packaging/windows/dist/
+!agent/packaging/windows/dist/apollo-agent.exe
+!agent/packaging/linux/dist/
+!agent/packaging/linux/dist/apollo-agent
+!agent/packaging/macos/dist/
+!agent/packaging/macos/dist/apollo-agent
