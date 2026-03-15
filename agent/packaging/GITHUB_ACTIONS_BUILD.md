@@ -201,7 +201,7 @@ Ajoute ~5 min au build. Necessaire quand le Rust evolue souvent.
 |-------|--------|--------|--------|
 | ~~**P0**~~ | ~~Creer le repo GitHub (private)~~ | ~~FAIT~~ | `ggabrie2025/apollo_data_auditor` |
 | ~~**P1**~~ | ~~Premier commit : README + LICENSE~~ | ~~FAIT~~ | github_push operationnel |
-| **P2** | `.github/workflows/build-agent.yml` (PyInstaller) | 1h | **A FAIRE** |
+| ~~**P2**~~ | ~~`.github/workflows/build-agent.yml` (PyInstaller)~~ | ~~FAIT~~ | `build-agent.yml` deploye |
 | **P3** | Tester le build CI Windows + Linux | 1h | **A FAIRE** |
 | **P4** | Pre-build Rust `.pyd`/`.so` x64 et commit | 30 min | **A FAIRE** |
 | **P5** | Tag `v1.7.R` → release automatique avec binaires | 10 min | — |
@@ -221,12 +221,59 @@ Ajoute ~5 min au build. Necessaire quand le Rust evolue souvent.
 - **Artifacts** telechargeables par les beta testeurs depuis GitHub Releases
 - **Zero infrastructure** — pas de VM UTM, pas de sync SPICE, pas de probleme d'architecture ARM
 
+## Build par plateforme — RESUME
+
+| Plateforme | Ou | Comment |
+|------------|-----|---------|
+| **macOS arm64** | **Local** (ce Mac) | `pyinstaller agent/packaging/macos/apollo_agent.spec` |
+| **Windows x64** | **GitHub Actions** | Tag `v*` ou workflow_dispatch |
+| **Linux x64** | **GitHub Actions** | Tag `v*` ou workflow_dispatch |
+
+macOS est build en local car on a la machine Apple Silicon.
+Windows/Linux passent par GitHub Actions car les VM UTM ARM ne produisent pas de binaires x86_64.
+
+## Checklist pre-push vers github_push
+
+**AVANT chaque push vers `~/github_push/` :**
+
+```
+[ ] 1. Tests critiques passes
+      cd ~/projet_apollo_data_auditor_rust-modules
+      python3 -m pytest critical/ -v
+
+[ ] 2. Copier les fichiers modifies (JAMAIS rsync)
+      git diff-tree --no-commit-id --name-only -r HEAD -- agent/ apollo_io_native/
+      cp <fichier> ~/github_push/<fichier>
+
+[ ] 3. Mettre a jour ~/github_push/CHANGELOG.md
+      - Ajouter les changements sous la version courante
+      - Format: ### Added / ### Fixed / ### Changed
+
+[ ] 4. Build macOS local (si code agent modifie)
+      pyinstaller agent/packaging/macos/apollo_agent.spec --clean --noconfirm
+      cp dist/apollo-agent ~/github_push/agent/packaging/macos/dist/
+
+[ ] 5. Mettre a jour SHA256SUMS.txt (si binaire macOS rebuild)
+      cd ~/github_push && shasum -a 256 agent/packaging/macos/dist/apollo-agent > SHA256SUMS.txt
+
+[ ] 6. Verifier qu'aucun secret ne fuit
+      cd ~/github_push && grep -rn "API_KEY\|TOKEN\|PASSWORD\|SECRET" agent/ --include="*.py" | grep -v "test\|example\|placeholder"
+
+[ ] 7. Commit + push depuis ~/github_push/ UNIQUEMENT
+      cd ~/github_push
+      git add -A && git diff --cached --stat
+      git commit -m "<type>: <description>"
+      git push origin main
+
+[ ] 8. Si release Windows/Linux : tagger pour declencher GH Actions
+      git tag v1.X.Y && git push origin v1.X.Y
+```
+
 ## References
 
 - `agent/packaging/README.md` — Build overview
 - `agent/packaging/macos/apollo_agent.spec` — Spec PyInstaller macOS
 - `agent/packaging/windows/apollo_agent_win.spec` — Spec PyInstaller Windows
-- `agent/packaging/windows/VM_BUILD_PROCEDURE.md` — Procedure VM (OBSOLETE, remplacee par GitHub Actions)
 
 ---
 

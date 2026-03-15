@@ -28,6 +28,25 @@ Pre-built binaries available in [Releases](../../releases).
 | Windows | `apollo-agent.exe` |
 | macOS (15.0+ arm64) | `apollo-agent-macos` |
 
+## Quick Start
+
+```bash
+# Linux / macOS
+./apollo-agent --serve
+
+# Windows (PowerShell)
+.\apollo-agent.exe --serve
+```
+
+Open http://localhost:8052 in your browser, enter your API key, and start scanning.
+
+```bash
+# Other commands
+apollo-agent --version          # Show version
+apollo-agent --help             # Full CLI options
+apollo-agent /path/to/scan      # Direct FILES scan (CLI mode)
+```
+
 ## License
 
 Apollo Agent is licensed under the **Business Source License 1.1 (BSL 1.1)**.

@@ -1,5 +1,16 @@
 # CHANGELOG — Apollo Agent
 
+## [1.7.R-patch1] — 2026-03-15
+
+### Fixed
+- Force UTF-8 encoding on Windows stdout/stderr — prevents CP1252 crash on Unicode characters (arrows, accented paths)
+
+### Changed
+- Purged all Nuitka references from build docs — PyInstaller is the only authorized build tool
+- Build docs now clarify: macOS = local PyInstaller, Windows/Linux = GitHub Actions
+- Makefile simplified: only `build-macos` target (Windows/Linux via CI)
+- Added 8-step pre-push checklist in GITHUB_ACTIONS_BUILD.md
+
 ## [1.7.R] — 2026-03-10
 
 ### Added

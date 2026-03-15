@@ -40,21 +40,19 @@ Invoke-WebRequest https://aiia-tech.com/download/install_windows.ps1 -OutFile in
 .\install.ps1
 ```
 
-### 2. Configure
+### 2. Launch
 
 ```bash
-apollo config init
+# Linux / macOS
+./apollo-agent --serve
+
+# Windows (PowerShell)
+.\apollo-agent.exe --serve
 ```
 
-### 3. Scan
+### 3. Use
 
-```bash
-apollo scan --source files --path /your/data
-```
-
-### 4. View Results
-
-Open your dashboard at `https://apollo-cloud-api-production.up.railway.app/dashboard-v3/`
+Open http://localhost:8052 in your browser, enter your API key, and start scanning.
 
 ---
 

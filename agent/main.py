@@ -22,6 +22,13 @@ import multiprocessing
 if getattr(sys, 'frozen', False):
     multiprocessing.freeze_support()
 
+# Windows UTF-8 fix — CP1252 ne supporte pas les caracteres Unicode
+# Protege contre UnicodeEncodeError sur stdout/stderr (chemins accentes, symboles, etc.)
+import io
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 import argparse
 import json
 from pathlib import Path

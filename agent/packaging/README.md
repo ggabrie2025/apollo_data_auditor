@@ -2,8 +2,8 @@
 title: "Build & Packaging - Apollo Agent (Overview)"
 agent: rails-executor
 project_id: PRJ-APOLLO
-date: 2026-02-24
-tags: [packaging, build, nuitka, installer, cross-platform]
+date: 2026-03-15
+tags: [packaging, build, pyinstaller, github-actions, cross-platform]
 category: technical
 type: guide
 status: active
@@ -11,97 +11,93 @@ status: active
 
 # Apollo Agent - Packaging Overview
 
-Build system for producing standalone agent binaries and installers for all platforms.
+Build system for producing standalone agent binaries for all platforms.
 
-## Architecture
+## Compilateur : PyInstaller (SEUL AUTORISE)
+
+**Nuitka = ABANDONNE** (decision definitive, Sprint 117). PyInstaller = seul outil de packaging.
+
+## Architecture de build
+
+```
+macOS (arm64)     -> PyInstaller LOCAL (ce Mac)
+Windows (x64)     -> PyInstaller via GitHub Actions (windows-latest)
+Linux (x64)       -> PyInstaller via GitHub Actions (ubuntu-latest)
+```
+
+**Pourquoi macOS en local ?**
+- On a la machine Apple Silicon
+- Le build fonctionne directement (`pyinstaller agent/packaging/macos/apollo_agent.spec`)
+- Pas besoin de CI pour ca
+
+**Pourquoi Windows/Linux en CI ?**
+- VM UTM sur Mac ARM = binaires ARM, pas x86_64 (18h perdues sur 3 sessions)
+- GitHub Actions fournit des runners x64 natifs gratuitement
+
+## Structure
 
 ```
 agent/packaging/
-  Makefile              Unified build commands
+  Makefile              Build macOS (seul OS local)
   README.md             This file
+  DEBLOCAGE_OS.md       Guide deblocage Gatekeeper/SmartScreen
+  GITHUB_ACTIONS_BUILD.md   Migration CI/CD, checklist pre-push
   windows/
-    build_windows.bat   Batch build script
-    build_windows.py    Python build script (Nuitka)
-    installer.iss       Inno Setup installer definition
-    README.md           Windows build guide
+    apollo_agent_win.spec   Spec PyInstaller Windows (utilise par GH Actions)
+    installer.iss           Inno Setup installer definition
+    README.md               Windows build guide
   linux/
-    build_linux.sh      Nuitka build script
-    install.sh          Automated installer (systemd)
-    README.md           Linux build guide
+    build_linux.sh          Build script Linux
+    install.sh              Automated installer (systemd)
+    README.md               Linux build guide
   macos/
-    build_macos.sh      PyInstaller build script (legacy)
-    apollo_agent.spec   PyInstaller spec file
-    README.md           macOS build guide
+    apollo_agent.spec       Spec PyInstaller macOS (build local)
+    build_macos.sh          Build script macOS
+    README.md               macOS build guide
 ```
 
-## Quick Start (Makefile)
+## Build macOS (local)
 
 ```bash
-cd agent/packaging
-
-make build-windows     # Build Windows binary (Nuitka)
-make build-linux       # Build Linux binary (Nuitka)
-make build-macos       # Build macOS binary (PyInstaller)
-make installer-win     # Build Windows installer (Inno Setup)
-make clean             # Remove all build artifacts
-make help              # Show available targets
+cd ~/projet_apollo_data_auditor_rust-modules
+pyinstaller agent/packaging/macos/apollo_agent.spec --clean --noconfirm
+# Binaire: dist/apollo-agent
 ```
+
+## Build Windows + Linux (GitHub Actions)
+
+Le workflow `.github/workflows/build-agent.yml` dans `~/github_push/` :
+- Se declenche sur tag `v*` ou manuellement (workflow_dispatch)
+- Compile le module Rust (maturin) + PyInstaller sur chaque OS
+- Produit des artifacts telechargeables + SHA256SUMS.txt
+
+Voir `GITHUB_ACTIONS_BUILD.md` pour les details et la checklist pre-push.
 
 ## Platform Matrix
 
-| Platform | Build Tool | Installer | Status |
-|----------|-----------|-----------|--------|
-| **Windows x64** | Nuitka 4.x + MSVC | Inno Setup 6.x (.exe) | Production |
-| **Linux x64** | Nuitka + GCC | install.sh (systemd) | Production |
-| **macOS** | PyInstaller | Manual | Legacy (P3: migrate to Nuitka) |
-
-## Build Pipeline (Windows — Production)
-
-```
-1. Cross-compile Rust .pyd (Mac → cargo-xwin → apollo_io_native.pyd)
-2. Transfer .pyd to Windows VM (shared drive Z:\)
-3. Build binary on VM (Nuitka → apollo-agent.exe ~100 MB)
-4. Build installer (Inno Setup → APOLLO_DataAuditor_Setup_1.7.R_x64.exe ~25 MB)
-5. Test installer on clean VM
-6. Ship setup.exe to client
-```
-
-## Build Pipeline (Linux — Production)
-
-```
-1. Build Rust module (maturin develop --release → apollo_io_native.so)
-2. Build binary (Nuitka → apollo-agent ~20-50 MB)
-3. Install (sudo ./install.sh --api-key xxx)
-4. Enable service (systemctl enable apollo-agent)
-```
-
-## Output Summary
-
-| Platform | Binary | Installer |
-|----------|--------|-----------|
-| Windows | `dist/apollo-agent.exe` | `output/APOLLO_DataAuditor_Setup_1.7.R_x64.exe` |
-| Linux | `dist/apollo-agent` | N/A (install.sh) |
-| macOS | `dist/apollo-agent` | N/A (manual) |
-
-## Client Experience
-
-The client receives a single installer file. No Python, Rust, or build tools required.
-
-- **Windows**: Double-click `APOLLO_DataAuditor_Setup_1.7.R_x64.exe` → GUI wizard with API key page
-- **Linux**: `sudo ./install.sh --api-key xxx` → Binary + systemd service
-- **macOS**: Manual copy (automated installer planned P3)
+| Platform | Build Tool | Build Location | Spec |
+|----------|-----------|----------------|------|
+| **macOS arm64** | PyInstaller | **Local** (ce Mac) | `macos/apollo_agent.spec` |
+| **Windows x64** | PyInstaller | **GitHub Actions** | `windows/apollo_agent_win.spec` |
+| **Linux x64** | PyInstaller | **GitHub Actions** | `linux/apollo_agent_linux.spec` |
 
 ## Rust Module (apollo_io_native)
 
-Each platform needs the Rust PyO3 module compiled natively:
+Chaque plateforme a besoin du module Rust PyO3 compile nativement :
 
-| Platform | Output | Build Command |
-|----------|--------|---------------|
-| Windows | `apollo_io_native.pyd` | `cargo xwin build --release --target x86_64-pc-windows-msvc` |
-| Linux | `apollo_io_native.so` | `maturin develop --release` |
-| macOS | `apollo_io_native.so` | `maturin develop --release` |
+| Platform | Output | Build |
+|----------|--------|-------|
+| macOS | `apollo_io_native.so` | `maturin develop --release` (local) |
+| Windows | `apollo_io_native.pyd` | maturin dans GH Actions |
+| Linux | `apollo_io_native.so` | maturin dans GH Actions |
 
-See `apollo_io_native/BUILD.md` for detailed Rust build instructions.
+## Client Experience
+
+Le client recoit un seul binaire. Pas besoin de Python, Rust, ou outils de build.
+
+- **Windows**: `apollo-agent.exe` (ou installateur Inno Setup)
+- **Linux**: `apollo-agent` + `install.sh` (systemd)
+- **macOS**: `apollo-agent-macos` + `install_macos.sh`
 
 ---
 
