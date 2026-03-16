@@ -71,6 +71,8 @@ jobs:
             --hidden-import fastapi \
             --hidden-import httpx \
             --hidden-import pydantic \
+            --hidden-import ldap3 \
+            --hidden-import pyasn1 \
             agent/main.py
         shell: bash
 
