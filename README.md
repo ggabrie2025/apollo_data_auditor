@@ -47,6 +47,10 @@ apollo-agent --help             # Full CLI options
 apollo-agent /path/to/scan      # Direct FILES scan (CLI mode)
 ```
 
+## Security & Privacy
+
+APOLLO™ Data Auditor scanne vos données localement. Aucune valeur PII ne quitte votre infrastructure. See our full **[Data Privacy & Security Statement](./DATA_PRIVACY.md)**.
+
 ## License
 
 Apollo Agent is licensed under the **Business Source License 1.1 (BSL 1.1)**.
