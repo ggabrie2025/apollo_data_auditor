@@ -1,5 +1,11 @@
 # CHANGELOG — Apollo Agent
 
+## [1.7.R-patch4] — 2026-03-17
+
+### Fixed
+- LDAP/AD connector: fallback NTLM -> SIMPLE bind for Active Directory Windows (KB4520011)
+- ldap3 + pyasn1 added to requirements.txt and PyInstaller hidden-imports
+
 ## [1.7.R-patch1] — 2026-03-15
 
 ### Fixed
