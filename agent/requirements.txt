@@ -8,6 +8,10 @@ aiomysql>=0.2.0       # MySQL
 motor>=3.3.2          # MongoDB
 aioodbc>=0.5.0        # SQL Server (Sprint 30)
 
+# Directory Connectors (Sprint 87)
+ldap3>=2.9.0          # LDAP/AD connector
+pyasn1>=0.5.0         # ASN.1 (ldap3 dependency)
+
 # Cloud Connectors (Sprint 35)
 msal>=1.24.0          # Microsoft Graph OAuth
 aiohttp>=3.9.0        # Async HTTP client
