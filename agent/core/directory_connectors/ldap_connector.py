@@ -410,15 +410,19 @@ class LDAPConnector(DirectoryConnector):
         history = int(domain.pwdHistoryLength.value) if hasattr(domain, "pwdHistoryLength") and domain.pwdHistoryLength.value else 0
         lockout = int(domain.lockoutThreshold.value) if hasattr(domain, "lockoutThreshold") and domain.lockoutThreshold.value else 0
 
-        # maxPwdAge is in AD time units (-100ns intervals, negative = relative)
+        # maxPwdAge: ldap3 may return timedelta (parsed) or int (raw 100-ns intervals)
         max_age_days = None
         if hasattr(domain, "maxPwdAge") and domain.maxPwdAge.value:
-            raw = int(domain.maxPwdAge.value)
-            if raw < 0:
-                # Convert 100-ns intervals to days
-                max_age_days = abs(raw) // (10_000_000 * 86400)
-                if max_age_days == 0:
-                    max_age_days = None  # 0 means never expires
+            raw = domain.maxPwdAge.value
+            import datetime
+            if isinstance(raw, datetime.timedelta):
+                max_age_days = abs(raw.days) if raw.days != 0 else None
+            else:
+                raw = int(raw)
+                if raw < 0:
+                    max_age_days = abs(raw) // (10_000_000 * 86400)
+                    if max_age_days == 0:
+                        max_age_days = None
 
         return {
             "min_length": min_length,
