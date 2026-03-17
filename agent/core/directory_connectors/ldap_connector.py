@@ -92,11 +92,7 @@ class LDAPConnector(DirectoryConnector):
         return self._ldap3
 
     async def _connect(self):
-        """Etablit connexion LDAP si pas deja connecte.
-
-        Fallback strategy: NTLM (AD Windows) -> SIMPLE (OpenLDAP, AD permissif).
-        AD Windows refuse SIMPLE bind par defaut depuis Server 2019 (KB4520011).
-        """
+        """Etablit connexion LDAP si pas deja connecte."""
         if self.connection is not None:
             return
 
@@ -113,36 +109,14 @@ class LDAPConnector(DirectoryConnector):
             get_info=ldap3.ALL,
             connect_timeout=self.timeout,
         )
-
-        # Try NTLM first (AD Windows), then SIMPLE (OpenLDAP)
-        last_error = None
-        for auth_method in (ldap3.NTLM, ldap3.SIMPLE):
-            try:
-                user = bind_dn
-                # NTLM requires DOMAIN\\user format — convert UPN if needed
-                if auth_method == ldap3.NTLM and "@" in bind_dn:
-                    domain, _, _ = bind_dn.partition("@")
-                    fqdn = bind_dn.split("@")[1]
-                    netbios = fqdn.split(".")[0].upper()
-                    user = f"{netbios}\\{domain}"
-
-                conn = ldap3.Connection(
-                    server, user, bind_password,
-                    authentication=auth_method,
-                    auto_bind=True,
-                    read_only=True,
-                    receive_timeout=self.timeout,
-                )
-                logger.info(f"LDAP bind OK with {auth_method}")
-                self.connection = conn
-                self._detect_directory_type()
-                return
-            except Exception as e:
-                last_error = e
-                logger.debug(f"LDAP bind {auth_method} failed: {e}")
-                continue
-
-        raise last_error
+        conn = ldap3.Connection(
+            server, bind_dn, bind_password,
+            auto_bind=True,
+            read_only=True,
+            receive_timeout=self.timeout,
+        )
+        self.connection = conn
+        self._detect_directory_type()
 
     def _detect_directory_type(self):
         """Detecte si c'est un Active Directory ou OpenLDAP via rootDSE."""
