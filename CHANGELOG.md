@@ -1,5 +1,11 @@
 # CHANGELOG — Apollo Agent
 
+## [1.7.R-patch5] — 2026-03-18
+
+### Changed
+- Exclusions: browser AppData paths excluded by default (Edge, Chrome, Firefox, Brave)
+  Prevents false PII positives from minified JS files in Windows AppData
+
 ## [1.7.R-patch4] — 2026-03-17
 
 ### Fixed

@@ -145,6 +145,12 @@ files:
     - "*/$Recycle.Bin/*"
     - "*/System Volume Information/*"
 
+    # Navigateurs — fichiers JS minifies (faux positifs PII)
+    - "*/AppData/Microsoft/Edge/**"
+    - "*/AppData/Google/Chrome/**"
+    - "*/AppData/Mozilla/Firefox/**"
+    - "*/AppData/Local/BraveSoftware/**"
+
     # Cloud sync folders (avoid double-counting with CLOUD scan)
     # These are local mirrors of cloud storage — scanned via API instead
     - "*/OneDrive/*"
