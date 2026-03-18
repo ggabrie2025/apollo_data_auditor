@@ -104,6 +104,13 @@ class LDAPConnector(DirectoryConnector):
         bind_dn = self.config.get("bind_dn", "")
         bind_password = self.config.get("bind_password", "")
 
+        if bind_dn and ("CN=" in bind_dn.upper() or "DC=" in bind_dn.upper()):
+            logger.warning(
+                "LDAP bind_dn looks like a DN format (%s). "
+                "Windows Server AD may reject this — use UPN format instead (user@domain.local).",
+                bind_dn[:20] + "...",
+            )
+
         server = ldap3.Server(
             host, port=port, use_ssl=use_ssl,
             get_info=ldap3.ALL,

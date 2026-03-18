@@ -1,5 +1,13 @@
 # CHANGELOG — Apollo Agent
 
+## [1.7.R-patch9b] — 2026-03-18
+
+### Fixed
+- LDAP connector: warn when bind_dn uses DN format (CN=/DC=) instead of UPN
+  Windows Server 2022 AD rejects SIMPLE bind with DN format (KB4520011).
+  Warning logged with truncated bind_dn and explicit hint to use UPN (user@domain.local).
+  Documented as KI-088. No code logic changed — config-level workaround.
+
 ## [1.7.R-patch9] — 2026-03-18
 
 ### Fixed
