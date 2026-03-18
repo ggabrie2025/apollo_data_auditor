@@ -138,6 +138,9 @@ def _silent_infra_scan():
     Collects hardware inventory (disks, RAID, network, backup agents)
     and sends to Hub as source_type="infra". Non-blocking, failure = warning only.
     Sprint 101 original, refactored to run at login (not tied to FILES scan).
+
+    Fix patch9: payload also written to apollo_infra_{key_prefix}_{timestamp}.json
+    in tempdir so the file survives quota errors and can be ingested manually.
     """
     global _infra_sent
     if _infra_sent:
@@ -157,12 +160,37 @@ def _silent_infra_scan():
             "scores": None,
             "infra_summary": infra_data,
         }
+
+        # Write payload to disk before Hub send — survives quota errors / network failures
+        key_prefix = (_get_active_key() or "unknown")[:8]
+        ts = int(time.time())
+        output_path = os.path.join(
+            tempfile.gettempdir(),
+            f"apollo_infra_{key_prefix}_{ts}.json"
+        )
+        try:
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(infra_payload, f, indent=2, default=str)
+            logger.info(f"[INFRA] Payload saved to {output_path}")
+        except Exception as write_err:
+            logger.warning(f"[INFRA] Could not write tmp file: {write_err}")
+            output_path = None
+
         hub_resp, elapsed, err = send_to_hub(infra_payload, "infra")
         if hub_resp:
             _infra_sent = True
             logger.info(f"[INFRA] Sent to Hub in {elapsed:.1f}s: report_id={hub_resp.get('report_id')}")
+            # Clean up tmp file on successful send
+            if output_path and os.path.exists(output_path):
+                try:
+                    os.remove(output_path)
+                except Exception:
+                    pass
         else:
-            logger.warning(f"[INFRA] Hub send failed (non-blocking): {err}")
+            logger.warning(
+                f"[INFRA] Hub send failed (non-blocking): {err}. "
+                f"Payload available at: {output_path}"
+            )
     except Exception as e:
         logger.warning(f"[INFRA] Silent scan failed (non-blocking): {e}")
 
@@ -190,6 +218,7 @@ def _build_scan_cmd(module: str, extra_args: list) -> list:
             "agent.main_db": "db",
             "agent.main_directory": "directory",
             "agent.main_app": "app",
+            "agent.main_infra": "infra",
         }
         mode = mode_map.get(module, "files")
         return [sys.executable, "--mode", mode] + extra_args

@@ -326,6 +326,10 @@ def main():
             from agent.main_app import main as app_main
             sys.argv = [sys.argv[0]] + remaining
             return app_main()
+        elif args.mode == "infra":
+            from agent.main_infra import main as infra_main
+            sys.argv = [sys.argv[0]] + remaining
+            return infra_main()
         elif args.mode == "cloud":
             sys.argv = [sys.argv[0]] + remaining
             args = parser.parse_args()
