@@ -1,5 +1,13 @@
 # CHANGELOG — Apollo Agent
 
+## [1.7.R-patch8] — 2026-03-18
+
+### Fixed
+- Windows: detect NTFS junction point loops in _walk_directory
+  os.walk(followlinks=False) does not detect junction points as symlinks — AppData\Local
+  junctions looped back creating 21 phantom files per real file (max_depth=15 cap hit).
+  Fix: track resolved canonical paths via seen_real_paths set.
+
 ## [1.7.R-patch5] — 2026-03-18
 
 ### Changed

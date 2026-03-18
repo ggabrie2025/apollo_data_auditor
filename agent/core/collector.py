@@ -111,9 +111,22 @@ def _walk_directory(
     Yields error strings for files that couldn't be processed.
     """
     count = 0
+    seen_real_paths: set = set()
 
     for dirpath, dirnames, filenames in os.walk(root, topdown=True, followlinks=False):
         current_dir = Path(dirpath)
+
+        # Guard: detect junction point / reparse point loops (Windows)
+        # resolve() returns the canonical path — if already visited, it's a loop
+        try:
+            real_dir = Path(current_dir).resolve()
+        except (OSError, PermissionError):
+            dirnames.clear()
+            continue
+        if real_dir in seen_real_paths:
+            dirnames.clear()
+            continue
+        seen_real_paths.add(real_dir)
 
         # Calculate depth
         try:
