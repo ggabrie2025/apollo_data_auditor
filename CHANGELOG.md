@@ -1,6 +1,6 @@
 # CHANGELOG — Apollo Agent
 
-## [1.7.R-patch9b] — 2026-03-18
+## [1.7.R-patch10] — 2026-03-18
 
 ### Fixed
 - LDAP connector: warn when bind_dn uses DN format (CN=/DC=) instead of UPN
