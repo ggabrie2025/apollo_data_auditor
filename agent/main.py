@@ -293,7 +293,7 @@ def main():
     )
     parser.add_argument(
         "--mode",
-        choices=["files", "db", "cloud", "directory", "app"],
+        choices=["files", "db", "cloud", "directory", "app", "infra"],
         help="Scanner mode for frozen binary subprocess routing"
     )
 

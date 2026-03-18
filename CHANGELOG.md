@@ -3,7 +3,7 @@
 ## [1.7.R-patch9] — 2026-03-18
 
 ### Fixed
-- Infra scan: add `--mode infra` dispatch in main.py (frozen binary routing)
+- Infra scan: add `--mode infra` to argparse choices + dispatch in main.py
 - Infra scan: add `agent.main_infra` to mode_map in _build_scan_cmd (server.py)
 - Infra scan: _silent_infra_scan now writes apollo_infra_{key_prefix}_{ts}.json
   to tempdir before Hub send — payload survives quota errors / network failures.
