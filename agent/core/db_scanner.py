@@ -26,7 +26,7 @@ from typing import Dict, Any, List, Optional, Literal
 from datetime import datetime
 
 from .db_connectors import PostgreSQLConnector, MySQLConnector, MongoDBConnector, SQLServerConnector
-from .pii_scanner import PII_PATTERNS
+from .pii_scanner import PII_PATTERNS, PII_VALIDATORS
 from .db_snapshot import load_snapshot_from_hub, create_snapshot_data, get_source_id
 from .db_differential import get_tables_to_scan, should_scan_table
 from .db_sampler import DBSmartSampler  # V1.5: Zone-aware sampling
@@ -650,6 +650,9 @@ class DBScanner:
                             # Use PII regex patterns (same as FILES)
                             for pii_type, pattern in self.pii_patterns.items():
                                 if pattern.search(value):
+                                    validator = PII_VALIDATORS.get(pii_type)
+                                    if validator is not None and not validator(value):
+                                        continue
                                     pii_types.add(pii_type)
                                     if col_name not in pii_columns:
                                         pii_columns.append(col_name)

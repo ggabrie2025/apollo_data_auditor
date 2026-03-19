@@ -2,11 +2,11 @@
 title: "Memo — Test local installateurs Apollo Agent v1.7.R"
 agent: redactor
 project_id: PRJ-APOLLO
-date: 2026-03-08
+date: 2026-03-19
 tags: [installateur, test, binaire, distribution]
 category: technical
 type: note
-status: draft
+status: active
 ---
 
 # Memo — Test local installateurs Apollo Agent v1.7.R
@@ -36,10 +36,14 @@ Repo de developpement local. Contient les releases finales organisees par OS.
 ```
 ~/projet_apollo_data_auditor_rust-modules/
   releases/v1.7.R/
-    macos/apollo-agent-macos     ← binaire VALIDE (arm64 natif)
-    linux/apollo-agent           ← binaire CI (a rebuilder)
-    windows/apollo-agent.exe     ← binaire CI (a rebuilder)
+    macos/apollo-agent-macos     ← binaire VALIDE (arm64 natif, build local PyInstaller)
+    linux/apollo-agent           ← binaire CI (telecharger depuis GH Actions artifacts)
+    windows/apollo-agent.exe     ← binaire CI (telecharger depuis GH Actions artifacts)
 ```
+
+> **Note (2026-03-19)** : Linux et Windows sont buildés par GitHub Actions sur tag. Telecharger via :
+> `gh run download $RUN_ID --repo ggabrie2025/apollo_data_auditor -n apollo-agent-ubuntu-latest -D /tmp/patch_linux`
+> `gh run download $RUN_ID --repo ggabrie2025/apollo_data_auditor -n apollo-agent-windows-latest -D /tmp/patch_win`
 
 ### 3. Hostinger (`aiia-tech.com/download/`) — structure cible finale
 

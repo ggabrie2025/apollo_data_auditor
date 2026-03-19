@@ -1,5 +1,18 @@
 # CHANGELOG — Apollo Agent
 
+## [1.7.R-patch11] — 2026-03-19
+
+### Fixed
+- PII scan (KI-080/L-006): apply elfproef (BSN NL) and mod97 (NISS BE) validators in all 3 scan
+  paths. PATH B (optimized_scanner, default prod) and PATH C (db_scanner) had no validator —
+  every 9-digit number was counted as Dutch BSN. All paths now apply validators consistently.
+
+### Refactored
+- PII scan (KI-080/L-011): consolidate 3 independent PII pattern dicts into single source +
+  derivation. DICT-C (340 lines, dead code) deleted. DICT-B derived from DICT-A at module load.
+  6 EU patterns (DNI/NIE/NIF/PESEL/CF/IBAN-SEPA) reactivated in PATH B. iban_fr added.
+  Deduplication (seen_values set) in both scan paths. Net: -420 lines.
+
 ## [1.7.R-patch10] — 2026-03-18
 
 ### Fixed

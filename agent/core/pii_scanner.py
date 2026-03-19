@@ -261,6 +261,7 @@ PII_VALIDATORS: Dict[str, callable] = {
     'niss_be': _validate_niss_be,
     'codice_fiscale_it': _validate_codice_fiscale_it,
     'iban': _validate_iban,
+    'iban_fr': _validate_iban,
 }
 
 
@@ -277,6 +278,10 @@ PII_PATTERNS: Dict[str, re.Pattern] = {
     ),
     "iban": re.compile(
         r'\b[A-Z]{2}\d{2}[A-Z0-9]{4}\d{7}(?:[A-Z0-9]?){0,16}\b',
+        re.IGNORECASE
+    ),
+    "iban_fr": re.compile(
+        r'FR\d{2}\s*(?:\d{4}\s*){5}\d{3}',
         re.IGNORECASE
     ),
 
@@ -742,10 +747,11 @@ def _scan_content(
     content: str,
     max_matches_per_type: int
 ) -> PIIScanResult:
-    """Scan content for PII patterns with checksum validation."""
+    """Scan content for PII patterns with checksum validation and deduplication."""
     matches: List[PIIMatch] = []
     pii_types_found: set = set()
     total_count = 0
+    seen_values: set = set()
 
     # Split into lines for line number tracking
     lines = content.split('\n')
@@ -762,6 +768,11 @@ def _scan_content(
                 if validator is not None:
                     if not validator(value):
                         continue  # Skip invalid checksum
+
+                # Deduplication: skip if we've already seen this exact value
+                if value in seen_values:
+                    continue
+                seen_values.add(value)
 
                 total_count += 1
                 type_count += 1
@@ -875,341 +886,3 @@ def get_pii_patterns_info() -> Dict[str, str]:
         "api_key": "API keys and tokens (OpenAI, AWS, Google, Stripe, GitHub) [Security Risk]",
         "secret_env": "Secrets in environment variables (DATABASE_URL, JWT_SECRET, etc.) [Security Risk]",
     }
-
-
-# ============================================================================
-# PARALLEL CPU (ProcessPool - bypass GIL)
-# ============================================================================
-
-import os
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import cpu_count
-import re
-
-CPU_WORKERS = min(int(os.getenv('CPU_WORKERS', 4)), cpu_count() or 4)
-
-# Precompiled patterns for performance (bytes - parallel scan)
-# NOTE: Parallel scan uses regex only, no checksum validation (for speed)
-# Full validation happens in _scan_content for detailed analysis
-PII_PATTERNS_BYTES = {
-    # --- UNIVERSAL ---
-    'email': re.compile(rb'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'),
-    'iban': re.compile(rb'[A-Z]{2}\d{2}[A-Z0-9]{4}\d{7}[A-Z0-9]{0,16}', re.IGNORECASE),
-
-    # --- FRANCE ---
-    'phone_fr': re.compile(rb'(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}'),
-    'ssn_fr': re.compile(rb'[12]\d{2}(?:0[1-9]|1[0-2])(?:\d{2}|\d[AB])\d{3}\d{3}\d{2}'),
-
-    # --- SPAIN ---
-    'dni_es': re.compile(rb'\d{8}[A-HJ-NP-TV-Z]', re.IGNORECASE),
-    'nie_es': re.compile(rb'[XYZ]\d{7}[A-Z]', re.IGNORECASE),
-
-    # --- PORTUGAL ---
-    'nif_pt': re.compile(rb'[1235]\d{8}'),
-
-    # --- POLAND ---
-    'pesel_pl': re.compile(rb'\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{5}'),
-
-    # --- ITALY ---
-    'codice_fiscale_it': re.compile(rb'[A-Z]{6}\d{2}[A-EHLMPR-T](?:0[1-9]|[12]\d|3[01])[A-Z]\d{3}[A-Z]', re.IGNORECASE),
-
-    # --- BELGIUM ---
-    'niss_be': re.compile(rb'\d{2}[.\s]?\d{2}[.\s]?\d{2}[-.\s]?\d{3}[.\s]?\d{2}'),
-
-    # --- NETHERLANDS ---
-    'bsn_nl': re.compile(rb'\d{9}'),
-
-    # REMOVED: steuerid_de, personalausweis_de, svnr_at (too generic, no checksum)
-
-    # ==========================================================================
-    # ARTICLE 9 RGPD - SENSITIVE DATA (Sprint 59)
-    # ==========================================================================
-
-    # --- HEALTH DATA ---
-    'health_data': re.compile(
-        rb'\b('
-        rb'diabete|diabetique|cancer|tumeur|oncolog|VIH|HIV|sida|aids|'
-        rb'diagnostic|pathologie|symptome|allergie|allergique|maladie|infection|'
-        rb'disease|illness|diagnosis|symptom|patient|medical.record|health.record|'
-        rb'medicament|ordonnance|prescription|traitement|therapeut|therapie|'
-        rb'hospitalisation|hopital|clinique|chirurgie|operation|'
-        rb'medication|treatment|therapy|hospital|surgery|clinical|'
-        rb'psychiatr|psycholog|depression|anxiete|bipolaire|schizophren|'
-        rb'mental.health|psychiatric|psychological|anxiety|bipolar|'
-        rb'handicap|invalidite|incapacite|arret.maladie|conge.maladie|'
-        rb'disability|disabled|sick.leave|medical.leave|'
-        rb'mutuelle|securite.sociale|cpam|assurance.maladie|'
-        rb'health.insurance|medical.insurance|'
-        rb'vaccin|vaccination|vaccine|antecedent|medical|sante|health'
-        rb')\b',
-        re.IGNORECASE
-    ),
-
-    # --- BIOMETRIC DATA ---
-    'biometric': re.compile(
-        rb'\b('
-        rb'empreinte|fingerprint|empreinte.digitale|'
-        rb'biometr|biometric|'
-        rb'reconnaissance.faciale|facial.recognition|face.recognition|'
-        rb'reconnaissance.vocale|voice.recognition|voice.print|'
-        rb'scan.retine|retinal.scan|iris|'
-        rb'geometrie.main|hand.geometry|palm.print|'
-        rb'ADN|DNA|genome|genomique|genomic|genetique|genetic|chromosome|'
-        rb'profil.genetique|genetic.profile|test.ADN|DNA.test|analyse.ADN|DNA.analysis'
-        rb')\b',
-        re.IGNORECASE
-    ),
-
-    # --- POLITICAL DATA ---
-    'political': re.compile(
-        rb'\b('
-        rb'parti.politique|political.party|affiliation.politique|political.affiliation|'
-        rb'syndicat|syndical|syndique|union.member|trade.union|labor.union|'
-        rb'CGT|CFDT|FO|CFTC|CFE.CGC|UNSA|SUD|FSU|'
-        rb'adherent|membre|militant|member|activist|'
-        rb'delegue.syndical|shop.steward|union.representative|representant.personnel|'
-        rb'comite.entreprise|works.council|CSE|'
-        rb'greve|strike|manifestation|protest|demonstration|'
-        rb'election|vote|electeur|voter|candidat|candidate|campagne.electorale|political.campaign'
-        rb')\b',
-        re.IGNORECASE
-    ),
-
-    # --- RELIGIOUS DATA ---
-    'religious': re.compile(
-        rb'\b('
-        rb'catholique|catholic|protestant|lutherien|lutheran|calviniste|calvinist|'
-        rb'orthodoxe|orthodox|evangelique|evangelical|temoin.jehova|jehovah.witness|'
-        rb'musulman|muslim|islam|islamique|islamic|'
-        rb'juif|jewish|judaisme|judaism|'
-        rb'bouddhiste|buddhist|bouddhisme|buddhism|'
-        rb'hindou|hindu|hindouisme|hinduism|sikh|sikhisme|'
-        rb'athee|atheist|agnostique|agnostic|laique|secular|'
-        rb'religion|religieux|religious|culte|worship|pratiquant|practicing|'
-        rb'confession|faith|croyance|belief|spirituel|spiritual|priere|prayer|'
-        rb'eglise|church|mosquee|mosque|synagogue|temple|paroisse|parish'
-        rb')\b',
-        re.IGNORECASE
-    ),
-
-    # --- SEXUAL ORIENTATION ---
-    'sexual_orientation': re.compile(
-        rb'\b('
-        rb'homosexuel|homosexual|gay|lesbienne|lesbian|'
-        rb'bisexuel|bisexual|pansexuel|pansexual|'
-        rb'heterosexuel|heterosexual|straight|'
-        rb'transgenre|transgender|transsexuel|transsexual|'
-        rb'non.binaire|non.binary|genre.fluide|gender.fluid|'
-        rb'LGBT|LGBTQ|LGBTQI|LGBTQIA|queer|'
-        rb'orientation.sexuelle|sexual.orientation|'
-        rb'identite.genre|gender.identity|'
-        rb'coming.out|pride|gay.pride|fierte|marche.des.fiertes'
-        rb')\b',
-        re.IGNORECASE
-    ),
-
-    # --- ETHNIC ORIGIN ---
-    'ethnic_origin': re.compile(
-        rb'\b('
-        rb'origine.ethnique|origine.raciale|race|ethnie|'
-        rb'ascendance|communaute.ethnique|groupe.ethnique|'
-        rb'ethnic.origin|racial.origin|ethnicity|'
-        rb'ancestry|ethnic.background|ethnic.group|'
-        rb'caucasien|caucasian|africain|african|asiatique|asian|'
-        rb'arabe|arab|hispanique|hispanic|latino|latina|'
-        rb'amerindien|native.american|indigenous|autochtone|'
-        rb'noir|black|blanc|white|metis|mixed.race|multiracial|biracial'
-        rb')\b',
-        re.IGNORECASE
-    ),
-
-    # --- EEO ETHNICITY ---
-    'eeo_ethnicity': re.compile(
-        rb'\b('
-        rb'Native.American|American.Indian|Alaska.Native|tribal|'
-        rb'Cherokee|Navajo|Sioux|Apache|Iroquois|Lakota|'
-        rb'Asian.American|Chinese.American|Japanese.American|Korean.American|'
-        rb'Vietnamese.American|Filipino.American|Indian.American|Pakistani.American|'
-        rb'African.American|Afro.American|Black.American|'
-        rb'Hispanic.American|Latino.American|Latina.American|Mexican.American|'
-        rb'Puerto.Rican|Cuban.American|Chicano|Chicana|'
-        rb'Pacific.Islander|Hawaiian|Samoan|Guamanian|'
-        rb'Middle.Eastern|Arab.American|Persian|Iranian.American|'
-        rb'Two.or.more.races|Multiethnic'
-        rb')\b',
-        re.IGNORECASE
-    ),
-
-    # --- GENDER (contextual pattern, fix M-015) ---
-    'gender': re.compile(
-        rb'(?:'
-        rb'(?:gender|sex|sexe|genre)\s*[:=]\s*'
-        rb'(?:male|female|homme|femme|masculin|feminin|man|woman|m|f|other|autre)\b'
-        rb'|'
-        rb'\b(?:non.binaire|non.binary|genderqueer|agender|bigender)\b'
-        rb')',
-        re.IGNORECASE
-    ),
-
-    # ==========================================================================
-    # FINANCIAL & TAX DATA - HIGH RISK (Sprint 59)
-    # ==========================================================================
-
-    # --- CREDIT CARD (PCI-DSS) ---
-    'credit_card': re.compile(
-        rb'\b('
-        rb'4\d{15}|'
-        rb'5[1-5]\d{14}|2[2-7]\d{14}|'
-        rb'3[47]\d{13}|'
-        rb'6(?:011|5\d{2}|4[4-9]\d)\d{12}'
-        rb')\b'
-    ),
-
-    # --- US SSN ---
-    'ssn_us': re.compile(
-        rb'\b('
-        rb'\d{3}-\d{2}-\d{4}|'
-        rb'\d{3}\s\d{2}\s\d{4}'
-        rb')\b'
-    ),
-
-    # --- US EIN ---
-    'ein_us': re.compile(rb'\b\d{2}-\d{7}\b'),
-
-    # --- US ITIN ---
-    'itin_us': re.compile(rb'\b9\d{2}-\d{2}-\d{4}\b'),
-
-    # --- SALARY DATA ---
-    'salary_data': re.compile(
-        rb'\b('
-        rb'salaire|remuneration|traitement|paie|bulletin.de.paie|fiche.de.paie|'
-        rb'salaire.brut|salaire.net|revenus|prime|bonus|avantages.en.nature|'
-        rb'salary|compensation|remuneration|wage|payslip|pay.stub|'
-        rb'gross.salary|net.salary|income|bonus|fringe.benefits|'
-        rb'stock.options|actions.gratuites|BSPCE|PEE|PERCO|'
-        rb'RSU|restricted.stock|equity|ESPP'
-        rb')\b',
-        re.IGNORECASE
-    ),
-
-    # --- CRYPTO WALLET ---
-    'crypto_wallet': re.compile(
-        rb'\b('
-        rb'[13][a-km-zA-HJ-NP-Z1-9]{25,34}|'
-        rb'bc1[a-zA-HJ-NP-Z0-9]{39,59}|'
-        rb'0x[a-fA-F0-9]{40}'
-        rb')\b'
-    ),
-
-    # --- TAX ID KEYWORDS ---
-    'tax_id_keyword': re.compile(
-        rb'\b('
-        rb'numero.fiscal|numero.de.contribuable|SPI|NIF|avis.d.imposition|'
-        rb'TVA.intracommunautaire|numero.TVA|revenu.fiscal|RFR|'
-        rb'tax.ID|taxpayer.ID|tax.identification|VAT.number|'
-        rb'federal.tax|state.tax|tax.return|W-2|1099|'
-        rb'Steueridentifikationsnummer|Steuer-ID|Steuernummer|'
-        rb'UTR|Unique.Taxpayer.Reference|NINO|National.Insurance'
-        rb')\b',
-        re.IGNORECASE
-    ),
-
-    # --- US BANK ROUTING — contextual (fix M-016) ---
-    'bank_routing_us': re.compile(
-        rb'(?:routing|ABA|ACH|wire\s*transfer|bank\s*(?:code|number))'
-        rb'\s*[:=\s#]\s*'
-        rb'(0[1-9]\d{7}|[1-2]\d{8}|3[0-2]\d{7})\b',
-        re.IGNORECASE
-    ),
-
-    # ==========================================================================
-    # API KEYS & SECRETS - SECURITY RISK (V1.7.1)
-    # ==========================================================================
-
-    # --- API KEY (structured patterns) ---
-    'api_key': re.compile(
-        rb'(?:'
-        rb'sk-(?:proj-)?[A-Za-z0-9]{32,}|'
-        rb'sk-ant-[A-Za-z0-9\-]{32,}|'
-        rb'AKIA[0-9A-Z]{16}|'
-        rb'AIza[0-9A-Za-z\-_]{35}|'
-        rb'sk_(?:live|test)_[A-Za-z0-9]{24,}|'
-        rb'gh[pousr]_[A-Za-z0-9]{36}|'
-        rb'(?:AZURE_[A-Z_]*KEY|AZURE_[A-Z_]*TOKEN|AZURE_[A-Z_]*SECRET'
-        rb'|COGNITIVE_SERVICE_KEY|AZURE_SUBSCRIPTION_ID'
-        rb'|Ocp-Apim-Subscription-Key|api[_-]key|subscription[_-]?(?:key|id))'
-        rb'\s*[:="\s]\s*'
-        rb'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-        rb')',
-        re.IGNORECASE
-    ),
-
-    # --- SECRET IN ENV (KEY=VALUE pattern) ---
-    'secret_env': re.compile(
-        rb'(?:^|[\s;])(?:'
-        rb'(?:OPENAI_API_KEY|ANTHROPIC_API_KEY|AZURE_OPENAI_KEY|AZURE_OPENAI_ENDPOINT|'
-        rb'AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID|'
-        rb'GOOGLE_API_KEY|GOOGLE_APPLICATION_CREDENTIALS|'
-        rb'STRIPE_SECRET_KEY|STRIPE_PUBLISHABLE_KEY|'
-        rb'DATABASE_URL|DB_PASSWORD|REDIS_URL|'
-        rb'SECRET_KEY|JWT_SECRET|SESSION_SECRET|ENCRYPTION_KEY|'
-        rb'SENDGRID_API_KEY|TWILIO_AUTH_TOKEN|SLACK_TOKEN|DISCORD_TOKEN|'
-        rb'GITHUB_TOKEN|GITLAB_TOKEN|NPM_TOKEN|'
-        rb'PRIVATE_KEY|CLIENT_SECRET|APP_SECRET)'
-        rb')\s*=\s*\S+',
-        re.MULTILINE
-    ),
-}
-
-def detect_pii_in_bytes(content: bytes) -> list:
-    """Detect PII in bytes content using precompiled regex"""
-    found = []
-    for pii_type, pattern in PII_PATTERNS_BYTES.items():
-        matches = pattern.findall(content)
-        if matches:
-            found.append({'type': pii_type, 'count': len(matches)})
-    return found
-
-def scan_pii_chunk(chunk: list) -> dict:
-    """Scan PII on a chunk of files (runs in separate process)"""
-    results = {}
-    for filepath, content in chunk:
-        if content:
-            pii_found = detect_pii_in_bytes(content)
-            results[filepath] = pii_found
-    return results
-
-def scan_pii_parallel(file_contents: dict) -> dict:
-    """Parallel PII scan - ProcessPoolExecutor (bypasses GIL)"""
-    logger.info(f"[PARALLEL-CPU] Scan PII {len(file_contents)} fichiers, {CPU_WORKERS} workers")
-    
-    if not file_contents:
-        return {}
-    
-    results = {}
-    items = list(file_contents.items())
-    
-    # Calculate chunk size
-    chunk_size = max(1, len(items) // (CPU_WORKERS * 4))
-    chunks = [items[i:i + chunk_size] for i in range(0, len(items), chunk_size)]
-    
-    try:
-        with ProcessPoolExecutor(max_workers=CPU_WORKERS) as executor:
-            futures = [executor.submit(scan_pii_chunk, chunk) for chunk in chunks]
-            
-            for future in futures:
-                try:
-                    chunk_results = future.result(timeout=300)  # 5 min timeout per chunk
-                    results.update(chunk_results)
-                except Exception as e:
-                    logger.error(f"[PARALLEL-CPU] Chunk error: {e}")
-    except Exception as e:
-        logger.error(f"[PARALLEL-CPU] ProcessPool error: {e}")
-        # Fallback to sequential
-        for filepath, content in items:
-            if content:
-                results[filepath] = detect_pii_in_bytes(content)
-    
-    logger.info(f"[PARALLEL-CPU] {len(results)} fichiers scannés")
-    return results
-

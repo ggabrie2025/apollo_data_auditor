@@ -24,6 +24,15 @@ import re
 
 logger = logging.getLogger(__name__)
 
+try:
+    from agent.core.pii_scanner import PII_VALIDATORS, PII_PATTERNS as _PII_PATTERNS_STR
+except ImportError:
+    try:
+        from core.pii_scanner import PII_VALIDATORS, PII_PATTERNS as _PII_PATTERNS_STR
+    except ImportError:
+        PII_VALIDATORS = {}
+        _PII_PATTERNS_STR = {}
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
@@ -77,214 +86,46 @@ def read_files_parallel(file_paths: List[str]) -> Dict[str, bytes]:
 # PARALLEL PII SCAN (ProcessPool - bypasses GIL)
 # ============================================================================
 
-# Precompiled patterns
-PII_PATTERNS = {
-    'email': re.compile(rb'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'),
-    'phone_fr': re.compile(rb'(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}'),
-    'iban_fr': re.compile(rb'FR\d{2}\s*(?:\d{4}\s*){5}\d{3}'),
-    'ssn_fr': re.compile(rb'[12]\d{2}(?:0[1-9]|1[0-2])(?:\d{2}|\d[AB])\d{3}\d{3}\d{2}'),
+def _derive_bytes_patterns(str_patterns: dict) -> dict:
+    """
+    Derive bytes PII_PATTERNS from the canonical string PII_PATTERNS.
+    Preserves all flags (IGNORECASE, MULTILINE, etc.).
+    Called once at module load.
+    """
+    derived = {}
+    for key, compiled in str_patterns.items():
+        try:
+            derived[key] = re.compile(
+                compiled.pattern.encode('utf-8'),
+                compiled.flags & ~re.UNICODE
+            )
+        except Exception as e:
+            logger.warning(f"[PII] Cannot derive bytes pattern for '{key}': {e}")
+    return derived
 
-    # Article 9 RGPD - Sensitive Data (Sprint 59)
-    'health_data': re.compile(
-        rb'\b('
-        rb'diabete|diabetique|cancer|tumeur|oncolog|VIH|HIV|sida|aids|'
-        rb'diagnostic|pathologie|symptome|allergie|allergique|maladie|infection|'
-        rb'disease|illness|diagnosis|symptom|patient|medical.record|health.record|'
-        rb'medicament|ordonnance|prescription|traitement|therapeut|therapie|'
-        rb'hospitalisation|hopital|clinique|chirurgie|operation|'
-        rb'medication|treatment|therapy|hospital|surgery|clinical|'
-        rb'psychiatr|psycholog|depression|anxiete|bipolaire|schizophren|'
-        rb'mental.health|psychiatric|psychological|anxiety|bipolar|'
-        rb'handicap|invalidite|incapacite|arret.maladie|conge.maladie|'
-        rb'disability|disabled|sick.leave|medical.leave|'
-        rb'mutuelle|securite.sociale|cpam|assurance.maladie|'
-        rb'health.insurance|medical.insurance|'
-        rb'vaccin|vaccination|vaccine|antecedent|medical|sante|health'
-        rb')\b',
-        re.IGNORECASE
-    ),
-    'biometric': re.compile(
-        rb'\b('
-        rb'empreinte|fingerprint|empreinte.digitale|'
-        rb'biometr|biometric|'
-        rb'reconnaissance.faciale|facial.recognition|face.recognition|'
-        rb'reconnaissance.vocale|voice.recognition|voice.print|'
-        rb'scan.retine|retinal.scan|iris|'
-        rb'geometrie.main|hand.geometry|palm.print|'
-        rb'ADN|DNA|genome|genomique|genomic|genetique|genetic|chromosome|'
-        rb'profil.genetique|genetic.profile|test.ADN|DNA.test|analyse.ADN|DNA.analysis'
-        rb')\b',
-        re.IGNORECASE
-    ),
-    'political': re.compile(
-        rb'\b('
-        rb'parti.politique|political.party|affiliation.politique|political.affiliation|'
-        rb'syndicat|syndical|syndique|union.member|trade.union|labor.union|'
-        rb'CGT|CFDT|FO|CFTC|CFE.CGC|UNSA|SUD|FSU|'
-        rb'adherent|membre|militant|member|activist|'
-        rb'delegue.syndical|shop.steward|union.representative|representant.personnel|'
-        rb'comite.entreprise|works.council|CSE|'
-        rb'greve|strike|manifestation|protest|demonstration|'
-        rb'election|vote|electeur|voter|candidat|candidate|campagne.electorale|political.campaign'
-        rb')\b',
-        re.IGNORECASE
-    ),
-    'religious': re.compile(
-        rb'\b('
-        rb'catholique|catholic|protestant|lutherien|lutheran|calviniste|calvinist|'
-        rb'orthodoxe|orthodox|evangelique|evangelical|temoin.jehova|jehovah.witness|'
-        rb'musulman|muslim|islam|islamique|islamic|'
-        rb'juif|jewish|judaisme|judaism|'
-        rb'bouddhiste|buddhist|bouddhisme|buddhism|'
-        rb'hindou|hindu|hindouisme|hinduism|sikh|sikhisme|'
-        rb'athee|atheist|agnostique|agnostic|laique|secular|'
-        rb'religion|religieux|religious|culte|worship|pratiquant|practicing|'
-        rb'confession|faith|croyance|belief|spirituel|spiritual|priere|prayer|'
-        rb'eglise|church|mosquee|mosque|synagogue|temple|paroisse|parish'
-        rb')\b',
-        re.IGNORECASE
-    ),
-    'sexual_orientation': re.compile(
-        rb'\b('
-        rb'homosexuel|homosexual|gay|lesbienne|lesbian|'
-        rb'bisexuel|bisexual|pansexuel|pansexual|'
-        rb'heterosexuel|heterosexual|straight|'
-        rb'transgenre|transgender|transsexuel|transsexual|'
-        rb'non.binaire|non.binary|genre.fluide|gender.fluid|'
-        rb'LGBT|LGBTQ|LGBTQI|LGBTQIA|queer|'
-        rb'orientation.sexuelle|sexual.orientation|'
-        rb'identite.genre|gender.identity|'
-        rb'coming.out|pride|gay.pride|fierte|marche.des.fiertes'
-        rb')\b',
-        re.IGNORECASE
-    ),
-    'ethnic_origin': re.compile(
-        rb'\b('
-        rb'origine.ethnique|origine.raciale|race|ethnie|'
-        rb'ascendance|communaute.ethnique|groupe.ethnique|'
-        rb'ethnic.origin|racial.origin|ethnicity|'
-        rb'ancestry|ethnic.background|ethnic.group|'
-        rb'caucasien|caucasian|africain|african|asiatique|asian|'
-        rb'arabe|arab|hispanique|hispanic|latino|latina|'
-        rb'amerindien|native.american|indigenous|autochtone|'
-        rb'noir|black|blanc|white|metis|mixed.race|multiracial|biracial'
-        rb')\b',
-        re.IGNORECASE
-    ),
-    'eeo_ethnicity': re.compile(
-        rb'\b('
-        rb'Native.American|American.Indian|Alaska.Native|tribal|'
-        rb'Cherokee|Navajo|Sioux|Apache|Iroquois|Lakota|'
-        rb'Asian.American|Chinese.American|Japanese.American|Korean.American|'
-        rb'Vietnamese.American|Filipino.American|Indian.American|Pakistani.American|'
-        rb'African.American|Afro.American|Black.American|'
-        rb'Hispanic.American|Latino.American|Latina.American|Mexican.American|'
-        rb'Puerto.Rican|Cuban.American|Chicano|Chicana|'
-        rb'Pacific.Islander|Hawaiian|Samoan|Guamanian|'
-        rb'Middle.Eastern|Arab.American|Persian|Iranian.American|'
-        rb'Two.or.more.races|Multiethnic'
-        rb')\b',
-        re.IGNORECASE
-    ),
-    # Contextual pattern (fix M-015: man/woman/male/female too generic)
-    'gender': re.compile(
-        rb'(?:'
-        rb'(?:gender|sex|sexe|genre)\s*[:=]\s*'
-        rb'(?:male|female|homme|femme|masculin|feminin|man|woman|m|f|other|autre)\b'
-        rb'|'
-        rb'\b(?:non.binaire|non.binary|genderqueer|agender|bigender)\b'
-        rb')',
-        re.IGNORECASE
-    ),
 
-    # Financial & Tax Data - HIGH RISK (Sprint 59)
-    'credit_card': re.compile(
-        rb'\b('
-        rb'4\d{15}|'
-        rb'5[1-5]\d{14}|2[2-7]\d{14}|'
-        rb'3[47]\d{13}|'
-        rb'6(?:011|5\d{2}|4[4-9]\d)\d{12}'
-        rb')\b'
-    ),
-    'ssn_us': re.compile(rb'\b(\d{3}-\d{2}-\d{4}|\d{3}\s\d{2}\s\d{4})\b'),
-    'ein_us': re.compile(rb'\b\d{2}-\d{7}\b'),
-    'itin_us': re.compile(rb'\b9\d{2}-\d{2}-\d{4}\b'),
-    'salary_data': re.compile(
-        rb'\b('
-        rb'salaire|remuneration|traitement|paie|bulletin.de.paie|fiche.de.paie|'
-        rb'salaire.brut|salaire.net|revenus|prime|bonus|avantages.en.nature|'
-        rb'salary|compensation|remuneration|wage|payslip|pay.stub|'
-        rb'gross.salary|net.salary|income|bonus|fringe.benefits|'
-        rb'stock.options|actions.gratuites|BSPCE|PEE|PERCO|'
-        rb'RSU|restricted.stock|equity|ESPP'
-        rb')\b',
-        re.IGNORECASE
-    ),
-    'crypto_wallet': re.compile(
-        rb'\b('
-        rb'[13][a-km-zA-HJ-NP-Z1-9]{25,34}|'
-        rb'bc1[a-zA-HJ-NP-Z0-9]{39,59}|'
-        rb'0x[a-fA-F0-9]{40}'
-        rb')\b'
-    ),
-    'tax_id_keyword': re.compile(
-        rb'\b('
-        rb'numero.fiscal|numero.de.contribuable|SPI|NIF|avis.d.imposition|'
-        rb'TVA.intracommunautaire|numero.TVA|revenu.fiscal|RFR|'
-        rb'tax.ID|taxpayer.ID|tax.identification|VAT.number|'
-        rb'federal.tax|state.tax|tax.return|W-2|1099|'
-        rb'Steueridentifikationsnummer|Steuer-ID|Steuernummer|'
-        rb'UTR|Unique.Taxpayer.Reference|NINO|National.Insurance'
-        rb')\b',
-        re.IGNORECASE
-    ),
-    'bank_routing_us': re.compile(  # contextual (fix M-016)
-        rb'(?:routing|ABA|ACH|wire\s*transfer|bank\s*(?:code|number))'
-        rb'\s*[:=\s#]\s*'
-        rb'(0[1-9]\d{7}|[1-2]\d{8}|3[0-2]\d{7})\b',
-        re.IGNORECASE
-    ),
-
-    # API KEYS & SECRETS - SECURITY RISK (V1.7.1)
-    'api_key': re.compile(
-        rb'(?:'
-        rb'sk-(?:proj-)?[A-Za-z0-9]{32,}|'
-        rb'sk-ant-[A-Za-z0-9\-]{32,}|'
-        rb'AKIA[0-9A-Z]{16}|'
-        rb'AIza[0-9A-Za-z\-_]{35}|'
-        rb'sk_(?:live|test)_[A-Za-z0-9]{24,}|'
-        rb'gh[pousr]_[A-Za-z0-9]{36}|'
-        rb'(?:AZURE_[A-Z_]*KEY|AZURE_[A-Z_]*TOKEN|AZURE_[A-Z_]*SECRET'
-        rb'|COGNITIVE_SERVICE_KEY|AZURE_SUBSCRIPTION_ID'
-        rb'|Ocp-Apim-Subscription-Key|api[_-]key|subscription[_-]?(?:key|id))'
-        rb'\s*[:="\s]\s*'
-        rb'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-        rb')',
-        re.IGNORECASE
-    ),
-    'secret_env': re.compile(
-        rb'(?:^|[\s;])(?:'
-        rb'(?:OPENAI_API_KEY|ANTHROPIC_API_KEY|AZURE_OPENAI_KEY|AZURE_OPENAI_ENDPOINT|'
-        rb'AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID|'
-        rb'GOOGLE_API_KEY|GOOGLE_APPLICATION_CREDENTIALS|'
-        rb'STRIPE_SECRET_KEY|STRIPE_PUBLISHABLE_KEY|'
-        rb'DATABASE_URL|DB_PASSWORD|REDIS_URL|'
-        rb'SECRET_KEY|JWT_SECRET|SESSION_SECRET|ENCRYPTION_KEY|'
-        rb'SENDGRID_API_KEY|TWILIO_AUTH_TOKEN|SLACK_TOKEN|DISCORD_TOKEN|'
-        rb'GITHUB_TOKEN|GITLAB_TOKEN|NPM_TOKEN|'
-        rb'PRIVATE_KEY|CLIENT_SECRET|APP_SECRET)'
-        rb')\s*=\s*\S+',
-        re.MULTILINE
-    ),
-}
+PII_PATTERNS = _derive_bytes_patterns(_PII_PATTERNS_STR) if _PII_PATTERNS_STR else {}
 
 def scan_pii_content(content: bytes) -> List[Dict]:
-    """Scan content for PII patterns"""
+    """Scan content for PII patterns with deduplication by value"""
     found = []
+    seen_values = set()
+
     for pii_type, pattern in PII_PATTERNS.items():
         matches = pattern.findall(content)
         if matches:
-            found.append({'type': pii_type, 'count': len(matches)})
+            validator = PII_VALIDATORS.get(pii_type)
+            if validator is not None:
+                matches = [m for m in matches if validator(m.decode('latin-1', errors='replace'))]
+
+            # Deduplicate: filter out values we've already seen
+            new_matches = [m for m in matches if m not in seen_values]
+            seen_values.update(matches)
+
+            # Count includes deduplicated matches, but type appears in output even if count=0
+            if matches:
+                found.append({'type': pii_type, 'count': len(new_matches)})
+
     return found
 
 def scan_pii_chunk(chunk: List[tuple]) -> Dict[str, List]:
