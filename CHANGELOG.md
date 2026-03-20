@@ -1,5 +1,12 @@
 # CHANGELOG — Apollo Agent
 
+## [1.7.R-patch13] — 2026-03-20
+
+### Fixed
+- KI-103: db_scanner._detect_pii() double-counting — add `break` after first valid
+  PII match per cell value. Prevents French IBAN from generating 'iban' + 'iban_fr',
+  and ITIN from generating 'ssn_us' + 'itin_us'. One type per cell value.
+
 ## [1.7.R-patch12] — 2026-03-20
 
 ### Added

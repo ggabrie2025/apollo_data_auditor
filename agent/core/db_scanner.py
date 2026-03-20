@@ -656,6 +656,7 @@ class DBScanner:
                                     pii_types.add(pii_type)
                                     if col_name not in pii_columns:
                                         pii_columns.append(col_name)
+                                    break  # One type per cell value (KI-103)
 
             # Update table metadata
             if pii_types:
