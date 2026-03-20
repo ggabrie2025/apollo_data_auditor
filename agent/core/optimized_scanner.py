@@ -107,9 +107,17 @@ def _derive_bytes_patterns(str_patterns: dict) -> dict:
 PII_PATTERNS = _derive_bytes_patterns(_PII_PATTERNS_STR) if _PII_PATTERNS_STR else {}
 
 def scan_pii_content(content: bytes) -> List[Dict]:
-    """Scan content for PII patterns with deduplication by value"""
+    """Scan content for PII patterns with deduplication by value.
+
+    Returns list of {'type': str, 'count': int} dicts.
+    Last element (if any PII found) is {'_estimated_data_subjects': int}
+    with the count of unique identifier values (email, phone, SSN).
+    """
+    from agent.core.pii_scanner import IDENTIFIER_TYPES
+
     found = []
     seen_values = set()
+    identifier_values = set()  # KI-101: distinct identifiers for data subjects estimation
 
     for pii_type, pattern in PII_PATTERNS.items():
         matches = pattern.findall(content)
@@ -118,13 +126,22 @@ def scan_pii_content(content: bytes) -> List[Dict]:
             if validator is not None:
                 matches = [m for m in matches if validator(m.decode('latin-1', errors='replace'))]
 
-            # Deduplicate: filter out values we've already seen
-            new_matches = [m for m in matches if m not in seen_values]
-            seen_values.update(matches)
+            # Deduplicate: normalize (strip spaces + uppercase) before comparing
+            def _norm(v):
+                return v.replace(b' ', b'').upper() if isinstance(v, bytes) else v.replace(' ', '').upper()
+            new_matches = [m for m in matches if _norm(m) not in seen_values]
+            seen_values.update(_norm(m) for m in new_matches)
 
-            # Count includes deduplicated matches, but type appears in output even if count=0
-            if matches:
+            # KI-101: track unique identifier values
+            if pii_type in IDENTIFIER_TYPES:
+                identifier_values.update(_norm(m) for m in new_matches)
+
+            if new_matches:
                 found.append({'type': pii_type, 'count': len(new_matches)})
+
+    # Append estimated_data_subjects as metadata entry (always, for consumer code)
+    if found or len(identifier_values) > 0:
+        found.append({'_estimated_data_subjects': len(identifier_values)})
 
     return found
 

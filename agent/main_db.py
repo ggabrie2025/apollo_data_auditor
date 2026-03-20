@@ -195,6 +195,11 @@ async def run_database_scan(config: dict, output_path: str, skip_pii: bool = Fal
                     "reduction_percent": result.reduction_percent,
                     # Governance metrics (Sprint 18 - PostgreSQL, MongoDB, MySQL)
                     "governance_metrics": result.governance_metrics,
+                    # KI-101: estimated data subjects (fallback — DB scanner not yet tracking identifiers)
+                    "estimated_data_subjects": 0,
+                    "data_subjects_method": "distinct_identifier_count",
+                    "data_subjects_identifiers_used": [],
+                    "data_subjects_fallback": True,
                 },
                 "tables": [table_to_dict(t) for t in result.tables],
                 "duration_seconds": result.duration_seconds,

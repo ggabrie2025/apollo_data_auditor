@@ -139,45 +139,53 @@ def scan_files_for_pii_parallel(files, progress_callback=None):
     
     if not PARALLEL_SCAN:
         return scan_files_for_pii(files, progress_callback)
-    
+
     logger.info(f"[OPT] Parallel PII scan: {len(files)} files")
-    
+
     # Extract file paths
     file_paths = [f.path if hasattr(f, 'path') else str(f) for f in files]
-    
+
     # Step 1: Parallel file reading
     logger.info("[OPT] Step 1: Parallel file reading...")
     file_contents = read_files_parallel(file_paths)
-    
+
     # Step 2: Parallel PII scanning
     logger.info("[OPT] Step 2: Parallel PII scanning...")
     pii_results = scan_pii_parallel(file_contents)
-    
+
     # Step 3: Update file objects with PII results
     pii_by_type = {}
+    total_estimated_data_subjects = 0
     for file_obj in files:
         fp = file_obj.path if hasattr(file_obj, 'path') else str(file_obj)
         pii_found = pii_results.get(fp, [])
-        
+
         if pii_found:
+            # Separate PII entries from metadata (KI-101: _estimated_data_subjects)
+            pii_entries = [p for p in pii_found if 'type' in p]
+            meta = [p for p in pii_found if '_estimated_data_subjects' in p]
+
             file_obj.pii_detected = True
-            file_obj.pii_types = [p['type'] for p in pii_found]
-            file_obj.pii_count = sum(p['count'] for p in pii_found)
-            
-            for p in pii_found:
+            file_obj.pii_types = [p['type'] for p in pii_entries]
+            file_obj.pii_count = sum(p['count'] for p in pii_entries)
+
+            if meta:
+                total_estimated_data_subjects += meta[0]['_estimated_data_subjects']
+
+            for p in pii_entries:
                 pii_by_type[p['type']] = pii_by_type.get(p['type'], 0) + p['count']
         else:
             file_obj.pii_detected = False
             file_obj.pii_types = []
             file_obj.pii_count = 0
-        
+
         if progress_callback and hasattr(file_obj, 'path'):
             progress_callback(len([f for f in files if hasattr(f, 'pii_detected')]), fp)
-    
+
     files_with_pii = [f for f in files if getattr(f, 'pii_detected', False)]
     logger.info(f"[OPT] PII found in {len(files_with_pii)}/{len(files)} files")
-    
-    return files, pii_by_type
+
+    return files, pii_by_type, total_estimated_data_subjects
 
 
 def main():
@@ -666,6 +674,7 @@ def run_scan(scan_paths: list, config, args, primary_path=None, scanned_paths_ar
 
     # Step 5: PII scan (on sampled files only)
     pii_by_type = {}
+    total_estimated_ds = 0
     if not args.no_pii:
         if not args.quiet:
             print("Step 5/8: Scanning for PII...")
@@ -676,9 +685,9 @@ def run_scan(scan_paths: list, config, args, primary_path=None, scanned_paths_ar
 
         # Use parallel scan if enabled
         if PARALLEL_SCAN:
-            included, pii_by_type = scan_files_for_pii_parallel(included, pii_progress)
+            included, pii_by_type, total_estimated_ds = scan_files_for_pii_parallel(included, pii_progress)
         else:
-            included, pii_by_type = scan_files_for_pii(included, pii_progress)
+            included, pii_by_type, total_estimated_ds = scan_files_for_pii(included, pii_progress)
 
         if not args.quiet:
             print(f"\r  PII scan complete: {len(included)} files")
@@ -763,6 +772,17 @@ def run_scan(scan_paths: list, config, args, primary_path=None, scanned_paths_ar
     output.summary.original_files_count = original_count
     output.summary.sample_ratio = round(sample_ratio, 4)
     output.summary.is_differential = is_differential
+
+    # KI-101: estimated data subjects (distinct identifier count)
+    from agent.core.pii_scanner import IDENTIFIER_TYPES
+    identifiers_used = sorted(t for t in IDENTIFIER_TYPES if t in pii_by_type)
+    fallback = total_estimated_ds == 0 and output.summary.files_with_pii > 0
+    if fallback:
+        total_estimated_ds = output.summary.files_with_pii
+    output.summary.estimated_data_subjects = total_estimated_ds
+    output.summary.data_subjects_method = "distinct_identifier_count"
+    output.summary.data_subjects_identifiers_used = identifiers_used
+    output.summary.data_subjects_fallback = fallback
 
     # Agent identity (bugfix — colonnes existantes en Railway)
     output.agent_hostname = agent_hostname

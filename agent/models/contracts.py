@@ -133,6 +133,7 @@ class PIIScanResult:
     pii_count: int
     matches: List[PIIMatch] = field(default_factory=list)
     scan_error: Optional[str] = None
+    estimated_data_subjects: int = 0
 
 
 # =============================================================================
@@ -159,6 +160,11 @@ class ScanSummary:
     original_files_count: int = 0
     sample_ratio: float = 0.0
     is_differential: bool = False
+    # KI-101: estimated data subjects (distinct identifier count)
+    estimated_data_subjects: int = 0
+    data_subjects_method: str = ""
+    data_subjects_identifiers_used: List[str] = field(default_factory=list)
+    data_subjects_fallback: bool = False
 
 
 @dataclass
@@ -204,6 +210,11 @@ class AgentOutput:
                 "original_files_count": self.summary.original_files_count,
                 "sample_ratio": self.summary.sample_ratio,
                 "is_differential": self.summary.is_differential,
+                # KI-101: estimated data subjects
+                "estimated_data_subjects": self.summary.estimated_data_subjects,
+                "data_subjects_method": self.summary.data_subjects_method,
+                "data_subjects_identifiers_used": self.summary.data_subjects_identifiers_used,
+                "data_subjects_fallback": self.summary.data_subjects_fallback,
             },
             "files": self.files,
             "config_used": self.config_used,

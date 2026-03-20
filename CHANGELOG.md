@@ -1,5 +1,20 @@
 # CHANGELOG — Apollo Agent
 
+## [1.7.R-patch12] — 2026-03-20
+
+### Added
+- KI-101: estimated_data_subjects — distinct identifier count (CNIL Art.33 / D195)
+  Track unique identifier values (email, phone_fr, ssn_fr, ssn_us) per file in
+  pii_scanner + optimized_scanner. Aggregate across all files. Add to JSON summary:
+  estimated_data_subjects, data_subjects_method, data_subjects_identifiers_used,
+  data_subjects_fallback. Fallback = files_with_pii when no identifiers found.
+  DB/app exports: fields present with fallback=true.
+
+### Fixed
+- KI-097: normalize seen_values (strip spaces + uppercase) before dedup comparison
+  prevents iban/iban_fr double-counting when values differ only by spacing.
+- Parallel path metadata bug: missing 'type' key in PII entries caused crash.
+
 ## [1.7.R-patch11] — 2026-03-19
 
 ### Fixed

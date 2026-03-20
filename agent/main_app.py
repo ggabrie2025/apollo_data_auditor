@@ -108,6 +108,11 @@ async def run_app_scan(config: dict, output_path: str) -> int:
         }
 
         pii = result.get("pii_summary", {})
+        # KI-101: estimated data subjects (fallback — app connector not yet tracking identifiers)
+        pii["estimated_data_subjects"] = 0
+        pii["data_subjects_method"] = "distinct_identifier_count"
+        pii["data_subjects_identifiers_used"] = []
+        pii["data_subjects_fallback"] = True
         logger.info(
             f"Scan complete: {pii.get('total_entities_scanned', 0)} entities, "
             f"{pii.get('total_records', 0)} records, "

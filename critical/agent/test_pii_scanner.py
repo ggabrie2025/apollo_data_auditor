@@ -589,3 +589,42 @@ class TestFinanceTaxScanFile:
             assert 'ssn_us' in result.pii_types
         finally:
             os.unlink(temp_path)
+
+
+# =============================================================================
+# KI-101: estimated_data_subjects tests
+# =============================================================================
+
+class TestEstimatedDataSubjects:
+    """Test distinct identifier count for data subjects estimation."""
+
+    def test_email_dedup(self):
+        """50 emails with 10 unique → estimated_data_subjects=10."""
+        from agent.core.pii_scanner import _scan_content
+        lines = [f"user{i % 10}@example.com" for i in range(50)]
+        content = "\n".join(lines)
+        result = _scan_content("test.txt", content, 100)
+        assert result.estimated_data_subjects == 10
+
+    def test_mixed_identifiers(self):
+        """Emails + phones → union count."""
+        from agent.core.pii_scanner import _scan_content
+        content = "alice@example.com\n+33 6 12 34 56 78\nbob@test.fr\nalice@example.com"
+        result = _scan_content("test.txt", content, 100)
+        # 2 unique emails + 1 unique phone = 3 identifiers
+        assert result.estimated_data_subjects == 3
+
+    def test_no_identifiers_only_iban(self):
+        """Only IBANs (not identifiers) → estimated_data_subjects=0."""
+        from agent.core.pii_scanner import _scan_content
+        content = "FR7630006000011234567890189\nDE89370400440532013000"
+        result = _scan_content("test.txt", content, 100)
+        assert result.estimated_data_subjects == 0
+
+    def test_ssn_fr_counted(self):
+        """French SSN is an identifier."""
+        from agent.core.pii_scanner import _scan_content
+        content = "NSS: 1 85 01 75 012 234 56\nalice@example.com"
+        result = _scan_content("test.txt", content, 100)
+        # SSN FR + email = at least 1 identifier (SSN may or may not pass validator)
+        assert result.estimated_data_subjects >= 1

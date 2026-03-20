@@ -266,6 +266,13 @@ PII_VALIDATORS: Dict[str, callable] = {
 
 
 # =============================================================================
+# IDENTIFIER TYPES — PII types that identify unique persons (CNIL Art.33 method)
+# Used to estimate data subjects count (distinct identifier count)
+# =============================================================================
+
+IDENTIFIER_TYPES = frozenset({'email', 'phone_fr', 'ssn_fr', 'ssn_us'})
+
+# =============================================================================
 # PII PATTERNS (EU - France + European Union)
 # Patterns with checksum validation for reduced false positives
 # =============================================================================
@@ -752,6 +759,7 @@ def _scan_content(
     pii_types_found: set = set()
     total_count = 0
     seen_values: set = set()
+    identifier_values: set = set()  # KI-101: distinct identifiers for data subjects estimation
 
     # Split into lines for line number tracking
     lines = content.split('\n')
@@ -769,14 +777,19 @@ def _scan_content(
                     if not validator(value):
                         continue  # Skip invalid checksum
 
-                # Deduplication: skip if we've already seen this exact value
-                if value in seen_values:
+                # Deduplication: normalize (strip spaces + uppercase) before comparing
+                norm_value = value.replace(' ', '').upper()
+                if norm_value in seen_values:
                     continue
-                seen_values.add(value)
+                seen_values.add(norm_value)
 
                 total_count += 1
                 type_count += 1
                 pii_types_found.add(pii_type)
+
+                # KI-101: track unique identifier values for data subjects estimation
+                if pii_type in IDENTIFIER_TYPES:
+                    identifier_values.add(norm_value)
 
                 # Record match (up to limit)
                 if type_count <= max_matches_per_type:
@@ -792,14 +805,15 @@ def _scan_content(
         has_pii=total_count > 0,
         pii_types=list(pii_types_found),
         pii_count=total_count,
-        matches=matches
+        matches=matches,
+        estimated_data_subjects=len(identifier_values)
     )
 
 
 def scan_files_for_pii(
     files: List[FileMetadata],
     progress_callback=None
-) -> Tuple[List[FileMetadata], Dict[str, int]]:
+) -> Tuple[List[FileMetadata], Dict[str, int], int]:
     """
     Scan multiple files for PII.
 
@@ -810,9 +824,10 @@ def scan_files_for_pii(
         progress_callback: Optional callback(count, filepath)
 
     Returns:
-        Tuple of (updated files, pii_by_type count)
+        Tuple of (updated files, pii_by_type count, total_estimated_data_subjects)
     """
     pii_by_type: Dict[str, int] = {}
+    total_estimated_data_subjects = 0
 
     for idx, file_meta in enumerate(files):
         if progress_callback and idx % 50 == 0:
@@ -824,12 +839,13 @@ def scan_files_for_pii(
             file_meta.pii_detected = True
             file_meta.pii_types = result.pii_types
             file_meta.pii_count = result.pii_count
+            total_estimated_data_subjects += result.estimated_data_subjects
 
             # Update totals
             for pii_type in result.pii_types:
                 pii_by_type[pii_type] = pii_by_type.get(pii_type, 0) + 1
 
-    return files, pii_by_type
+    return files, pii_by_type, total_estimated_data_subjects
 
 
 def get_pii_patterns_info() -> Dict[str, str]:
