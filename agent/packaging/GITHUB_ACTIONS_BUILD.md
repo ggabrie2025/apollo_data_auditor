@@ -98,7 +98,7 @@ Le bytecode .pyc est reversible (`uncompyle6`). Mitigations :
 ### Fichier : `.github/workflows/build-agent.yml`
 
 ```yaml
-name: Build Apollo Agent
+name: Build Apollo Data Auditor
 
 on:
   push:

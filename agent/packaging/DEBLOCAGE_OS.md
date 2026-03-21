@@ -1,5 +1,5 @@
 ---
-title: "Deblocage OS - Apollo Agent"
+title: "Deblocage OS - Apollo Data Auditor"
 agent: redactor
 project_id: PRJ-APOLLO
 date: 2026-03-05
@@ -9,9 +9,9 @@ type: guide
 status: active
 ---
 
-# Apollo Agent - Deblocage OS
+# Apollo Data Auditor - Deblocage OS
 
-Ce document couvre les situations ou macOS ou Windows bloque l'execution du binaire Apollo Agent.
+Ce document couvre les situations ou macOS ou Windows bloque l'execution du binaire Apollo Data Auditor.
 
 ---
 
@@ -122,7 +122,7 @@ apollo-agent.exe --version
 Resultat attendu :
 
 ```
-Apollo Agent v1.7.R
+Apollo Data Auditor v1.7.R
 ```
 
 ---

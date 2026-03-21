@@ -1,4 +1,4 @@
-# Apollo Agent V1.6 - Agent Leger
+# Apollo Data Auditor — Agent V1.6
 
 Standalone file scanner for Apollo Data Auditor. Scans file systems for metadata and PII detection, exports JSON for Hub Cloud consolidation.
 

@@ -1,5 +1,5 @@
 ---
-title: "Build & Packaging - Apollo Agent (Overview)"
+title: "Build & Packaging - Apollo Data Auditor (Overview)"
 agent: rails-executor
 project_id: PRJ-APOLLO
 date: 2026-03-15
@@ -9,7 +9,7 @@ type: guide
 status: active
 ---
 
-# Apollo Agent - Packaging Overview
+# Apollo Data Auditor - Packaging Overview
 
 Build system for producing standalone agent binaries for all platforms.
 

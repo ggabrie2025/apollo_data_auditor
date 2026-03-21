@@ -9,7 +9,7 @@ type: guide
 status: active
 ---
 
-# Apollo Agent - macOS Build & Packaging
+# Apollo Data Auditor - macOS Build & Packaging
 
 > **Note**: macOS build uses PyInstaller (onefile).
 

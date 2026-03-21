@@ -9,7 +9,7 @@ type: guide
 status: active
 ---
 
-# Apollo Agent - Linux Build & Packaging
+# Apollo Data Auditor - Linux Build & Packaging
 
 ## Prerequisites
 

@@ -1,4 +1,4 @@
-# Third-Party Licenses — Apollo Agent
+# Third-Party Licenses — Apollo Data Auditor
 
 Generated: 2026-03-08
 

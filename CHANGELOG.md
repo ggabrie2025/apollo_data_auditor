@@ -1,4 +1,4 @@
-# CHANGELOG — Apollo Agent
+# CHANGELOG — Apollo Data Auditor
 
 ## [1.7.R-patch13] — 2026-03-20
 

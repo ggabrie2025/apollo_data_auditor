@@ -1,6 +1,6 @@
 # Apollo I/O Native
 
-High-performance Rust module for Apollo Agent file scanning and fingerprinting.
+High-performance Rust module for Apollo Data Auditor file scanning and fingerprinting.
 
 ## Features
 
@@ -202,7 +202,7 @@ if is_io_uring_available():
 
 ## Fallback
 
-If this module is not installed, Apollo Agent automatically falls back to Python implementation:
+If this module is not installed, Apollo Data Auditor automatically falls back to Python implementation:
 
 ```python
 try:

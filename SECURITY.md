@@ -1,5 +1,5 @@
 ---
-title: "Security Policy — Apollo Agent"
+title: "Security Policy — Apollo Data Auditor"
 agent: redactor
 project_id: PRJ-APOLLO
 date: 2026-03-07
@@ -9,15 +9,15 @@ type: guide
 status: active
 ---
 
-# Security Policy — Apollo Agent
+# Security Policy — Apollo Data Auditor
 
 ## Distribution officielle
 
-**Les binaires Apollo Agent sont distribues exclusivement via :**
+**Les binaires Apollo Data Auditor sont distribues exclusivement via :**
 
 > **https://aiia-tech.com/download**
 
-Ne pas telecharger de binaires Apollo Agent depuis d'autres sources (GitHub Releases, mirrors, torrents).
+Ne pas telecharger de binaires Apollo Data Auditor depuis d'autres sources (GitHub Releases, mirrors, torrents).
 Tout binaire obtenu hors de ce canal est non verifie et potentiellement compromis.
 
 ---
@@ -92,7 +92,7 @@ Si vous pensez avoir telecharge un binaire corrompu ou altere :
    - Windows : `Get-FileHash apollo-agent.exe -Algorithm SHA256`
 3. Comparer avec `SHA256SUMS.txt` de `https://aiia-tech.com/download/SHA256SUMS.txt`
 4. Contacter : **contact@aiia-tech.com**
-   - Objet : `[SECURITY] Suspect binary - Apollo Agent vX.Y.Z`
+   - Objet : `[SECURITY] Suspect binary - Apollo Data Auditor vX.Y.Z`
    - Inclure : SHA256 du binaire, OS, source de telechargement
 
 ---

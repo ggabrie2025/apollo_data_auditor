@@ -9,7 +9,7 @@ type: guide
 status: active
 ---
 
-# Apollo Agent - Windows Build & Packaging
+# Apollo Data Auditor - Windows Build & Packaging
 
 ## Prerequisites
 

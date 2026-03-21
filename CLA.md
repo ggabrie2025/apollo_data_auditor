@@ -1,4 +1,4 @@
-# Contributor License Agreement (CLA) — Apollo Agent
+# Contributor License Agreement (CLA) — Apollo Data Auditor
 
 By submitting a Pull Request or contribution to this repository, you agree to the following:
 

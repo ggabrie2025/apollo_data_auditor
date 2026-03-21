@@ -1,5 +1,5 @@
 ---
-title: "Memo — Test local installateurs Apollo Agent v1.7.R"
+title: "Memo — Test local installateurs Apollo Data Auditor v1.7.R"
 agent: redactor
 project_id: PRJ-APOLLO
 date: 2026-03-19
@@ -9,7 +9,7 @@ type: note
 status: active
 ---
 
-# Memo — Test local installateurs Apollo Agent v1.7.R
+# Memo — Test local installateurs Apollo Data Auditor v1.7.R
 
 ## Organisation des repertoires
 

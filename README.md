@@ -60,7 +60,7 @@ APOLLO™ Data Auditor scanne vos données localement. Aucune valeur PII ne quit
 
 ## License
 
-Apollo Agent is licensed under the **Business Source License 1.1 (BSL 1.1)**.
+Apollo Data Auditor is licensed under the **Business Source License 1.1 (BSL 1.1)**.
 
 - **Free for non-commercial use** — personal, research, evaluation
 - **Commercial use requires a separate license**
