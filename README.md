@@ -2,13 +2,20 @@
 
 # Apollo Data Auditor — Agent V1.7.R
 
-Autonomous agent for data audit and GDPR exposure assessment.
-Scans files, databases, cloud storage and directory sources — sends metadata to the Apollo Cloud Hub for scoring.
+Native Rust agent for data audit and GDPR/CCPA exposure assessment.
+Scans files, databases, cloud storage and directory sources — sends anonymized metadata to Apollo Cloud Hub for scoring and compliance dashboard.
+
+## Architecture
+
+```
+Agent (on-premise, pure collector)  →  Apollo Cloud Hub  →  Risk scores · Compliance dashboard
+```
+
+The agent sends counters and metadata only — never PII values. Raw data never leaves your infrastructure.
 
 ## Free Beta Access
 
-Apollo Agent is free and open source.
-Cloud scoring (dashboard + GDPR exposure) requires a cloud account.
+The agent is open source. Cloud scoring (dashboard + GDPR exposure) requires a cloud account.
 
 **First 50 beta testers get free Starter access** (unlimited scans, up to 5 sources).
 
