@@ -17,6 +17,11 @@ target/
 .venv/
 .pytest_cache/
 
+# Internal build/ops docs — never public
+agent/packaging/windows/VM_BUILD_PROCEDURE.md
+agent/packaging/linux/DEBIAN_VM_SETUP.md
+MEMO_TEST_INSTALLATEURS.md
+
 # Release binaries — exceptions
 !agent/packaging/windows/dist/
 !agent/packaging/windows/dist/apollo-agent.exe

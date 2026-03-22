@@ -770,7 +770,7 @@ async def scan_database(config: DBScanConfig) -> DBScanResult:
             port=5433,
             database="apollo_test",
             username="apollo_user",
-            password="YOUR_DB_PASSWORD"
+            password="<your_password>"
         )
         result = await scan_database(config)
     """
