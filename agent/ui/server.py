@@ -46,20 +46,62 @@ from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-def _write_secure_temp(filepath: str, content: str) -> None:
-    """Write file with restricted permissions (0o600 Unix, ACL-restricted Windows)."""
-    fd = os.open(filepath, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, 'w', encoding='utf-8') as f:
-        f.write(content)
+_SECURE_TEMP_DIR: Optional[str] = None
+
+
+def _get_secure_temp_dir() -> str:
+    """Return (and create if needed) a user-private temp directory for config files.
+
+    - Linux/macOS: ~/.apollo/tmp/  with 0o700
+    - Windows:     %LOCALAPPDATA%\\Apollo\\tmp\\  with ACL restricted to current user
+
+    Called at startup and on each _write_secure_temp call (idempotent).
+    """
+    global _SECURE_TEMP_DIR
+    if _SECURE_TEMP_DIR is not None:
+        return _SECURE_TEMP_DIR
+
+    if sys.platform == 'win32':
+        base = os.environ.get('LOCALAPPDATA')
+        if not base:
+            logger.error("[SECURE_TEMP] LOCALAPPDATA not set — cannot create secure temp dir. "
+                         "Service account installations require LOCALAPPDATA to be configured.")
+            raise RuntimeError("LOCALAPPDATA environment variable required on Windows")
+        dirpath = os.path.join(base, 'Apollo', 'tmp')
+    else:
+        dirpath = os.path.join(os.path.expanduser('~'), '.apollo', 'tmp')
+
+    os.makedirs(dirpath, exist_ok=True)
+
     if sys.platform == 'win32':
         try:
-            username = os.environ.get('USERNAME', '')
-            if username:
-                subprocess.run(['icacls', filepath, '/inheritance:r',
-                                '/grant:r', f'{username}:(R,W)'],
-                               capture_output=True, timeout=5)
-        except Exception:
-            pass  # Best effort on Windows
+            result = subprocess.run(
+                ['icacls', dirpath, '/inheritance:r', '/grant:r', f'{os.getlogin()}:(OI)(CI)(F)'],
+                capture_output=True, timeout=10
+            )
+            if result.returncode != 0:
+                logger.warning(f"[SECURE_TEMP] icacls failed (rc={result.returncode}): "
+                               f"{result.stderr.decode(errors='replace')[:200]}")
+        except Exception as e:
+            logger.warning(f"[SECURE_TEMP] icacls error: {e}")
+    else:
+        os.chmod(dirpath, 0o700)
+
+    _SECURE_TEMP_DIR = dirpath
+    logger.info(f"[SECURE_TEMP] Using private temp dir: {dirpath}")
+    return dirpath
+
+
+def _write_secure_temp(filepath: str, content: str) -> None:
+    """Write content to a file in the user-private temp directory.
+
+    Security: parent directory has restricted ACL (0o700 Unix, owner-only
+    ACL on Windows set once at startup). Files inherit restrictions —
+    no per-file icacls, no TOCTOU window.
+    """
+    _get_secure_temp_dir()  # ensure dir exists (idempotent)
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(content)
 
 
 # Dynamic connector registry (autodiscovery)
@@ -165,7 +207,7 @@ def _silent_infra_scan():
         key_prefix = (_get_active_key() or "unknown")[:8]
         ts = int(time.time())
         output_path = os.path.join(
-            tempfile.gettempdir(),
+            _get_secure_temp_dir(),
             f"apollo_infra_{key_prefix}_{ts}.json"
         )
         try:
@@ -224,6 +266,26 @@ def _build_scan_cmd(module: str, extra_args: list) -> list:
         return [sys.executable, "--mode", mode] + extra_args
     else:
         return [sys.executable, "-m", module] + extra_args
+
+
+def _make_subprocess_env() -> dict:
+    """Build subprocess environment with inherited OS vars + agent-specific overrides.
+
+    Ensures consistent subprocess behavior across all audit types:
+    - Preserves parent process env vars (PATH, HOME, etc.)
+    - Adds AGENT-specific vars for scanning context
+    - Returns dict safe for subprocess.run(env=...) and asyncio.create_subprocess_exec(env=...)
+
+    Returns:
+        dict: Complete environment for subprocess
+    """
+    env = os.environ.copy()
+
+    # Add AGENT-specific overrides (if needed)
+    # env['AGENT_ROOT'] = str(AGENT_ROOT)  # Optional: if agent needs to know its own root
+    # env['AGENT_MODE'] = AGENT_MODE
+
+    return env
 
 
 # ============================================================================
@@ -919,7 +981,8 @@ async def execute_files_audit(session_id: str, sources: List[str]):
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd=str(AGENT_ROOT)
+            cwd=str(AGENT_ROOT),
+            env=_make_subprocess_env()
         )
 
         # Track for abort functionality
@@ -1163,7 +1226,7 @@ async def execute_databases_audit(session_id: str, sources: List[dict]):
                 session.current_step = f"In progress... {db_name} ({idx+1}/{len(sources)})"
 
             # Write temp config (owner-only permissions to protect credentials)
-            config_path = os.path.join(tempfile.gettempdir(), f"apollo_db_config_{session_id}_{idx}.json")
+            config_path = os.path.join(_get_secure_temp_dir(), f"apollo_db_config_{session_id}_{idx}.json")
             output_path = os.path.join(tempfile.gettempdir(), f"apollo_db_{session_id}_{idx}.json")
 
             _write_secure_temp(config_path, json.dumps(db_config))
@@ -1182,7 +1245,8 @@ async def execute_databases_audit(session_id: str, sources: List[dict]):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
-                    cwd=str(AGENT_ROOT)
+                    cwd=str(AGENT_ROOT),
+                    env=_make_subprocess_env()
                 )
 
                 # Track for abort functionality (use session_id + db index)
@@ -1368,7 +1432,8 @@ async def list_cloud_drives(request: CloudCredentials):
             capture_output=True,
             text=True,
             timeout=30,
-            cwd=str(AGENT_ROOT)
+            cwd=str(AGENT_ROOT),
+            env=_make_subprocess_env()
         )
 
         if result.returncode != 0:
@@ -1465,7 +1530,8 @@ async def execute_cloud_audit(
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd=str(AGENT_ROOT)
+            cwd=str(AGENT_ROOT),
+            env=_make_subprocess_env()
         )
 
         # Track for abort functionality
@@ -1729,7 +1795,7 @@ async def start_directory_audit(request: DirectoryAuditRequest, background_tasks
 async def execute_directory_audit(session_id: str, config: dict):
     """Execute DIRECTORY audit via subprocess CLI."""
     session = sessions[session_id]
-    config_path = os.path.join(tempfile.gettempdir(), f"apollo_dir_config_{session_id}.json")
+    config_path = os.path.join(_get_secure_temp_dir(), f"apollo_dir_config_{session_id}.json")
     output_path = os.path.join(tempfile.gettempdir(), f"apollo_dir_{session_id}.json")
 
     try:
@@ -1750,7 +1816,8 @@ async def execute_directory_audit(session_id: str, config: dict):
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd=str(AGENT_ROOT)
+            cwd=str(AGENT_ROOT),
+            env=_make_subprocess_env()
         )
 
         # Track for abort functionality
@@ -1882,7 +1949,7 @@ async def test_app_connection(request: AppAuditRequest):
 
     Returns: {"status": "ok", "app_type": str, "company_name": str} or error.
     """
-    config_path = os.path.join(tempfile.gettempdir(), f"apollo_app_test_{uuid.uuid4()}.json")
+    config_path = os.path.join(_get_secure_temp_dir(), f"apollo_app_test_{uuid.uuid4()}.json")
 
     try:
         config = {
@@ -1905,7 +1972,8 @@ async def test_app_connection(request: AppAuditRequest):
             capture_output=True,
             text=True,
             timeout=30,
-            cwd=str(AGENT_ROOT)
+            cwd=str(AGENT_ROOT),
+            env=_make_subprocess_env()
         )
 
         if result.returncode != 0:
@@ -1975,7 +2043,7 @@ async def start_app_audit(request: AppAuditRequest, background_tasks: Background
 async def execute_app_audit(session_id: str, config: dict):
     """Execute APP audit via subprocess CLI."""
     session = sessions[session_id]
-    config_path = os.path.join(tempfile.gettempdir(), f"apollo_app_config_{session_id}.json")
+    config_path = os.path.join(_get_secure_temp_dir(), f"apollo_app_config_{session_id}.json")
     output_path = os.path.join(tempfile.gettempdir(), f"apollo_app_{session_id}.json")
 
     try:
@@ -1996,7 +2064,8 @@ async def execute_app_audit(session_id: str, config: dict):
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd=str(AGENT_ROOT)
+            cwd=str(AGENT_ROOT),
+            env=_make_subprocess_env()
         )
 
         # Track for abort functionality
@@ -2159,9 +2228,7 @@ async def stream_progress(session_id: str):
                     "status": session.status,
                     "stats": session.stats,
                     "error": session.error,
-                    "hub_report_id": session.hub_report_id,
-                    # IMPORTANT: Include full result for export (same as sent to Hub)
-                    "result": session.result
+                    "hub_report_id": session.hub_report_id
                 }
                 yield f"event: complete\ndata: {json.dumps(final_data)}\n\n"
                 break
@@ -2228,7 +2295,6 @@ def send_to_hub(data: dict, source_type: str) -> tuple[Optional[dict], float, Op
         - On success: ({"report_id": ...}, elapsed, None)
         - On failure: (None, elapsed, "error description")
     """
-    import time
     start_time = time.time()
 
     if not _get_active_key():
@@ -2284,6 +2350,7 @@ def main():
     logger.info(f"Hub URL: {HUB_URL}")
     logger.info(f"Port: {PORT}")
     logger.info(f"Static dir: {static_dir}")
+    _get_secure_temp_dir()  # Pre-initialize secure temp dir at startup
 
     url = f"http://localhost:{PORT}/static/login.html"
     print(f"\n  Apollo Agent V{VERSION} — UI starting on {url}\n")
