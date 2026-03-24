@@ -81,7 +81,7 @@ jobs:
         with:
           name: apollo-agent-${{ matrix.os }}
           path: dist/${{ matrix.artifact }}
-          retention-days: 90
+          retention-days: 10
 
   checksum:
     needs: build
@@ -108,7 +108,7 @@ jobs:
         with:
           name: checksums
           path: SHA256SUMS.txt
-          retention-days: 90
+          retention-days: 10
 
       # NOTE: Les binaires sont distribues exclusivement via aiia-tech.com
       # SHA256SUMS.txt doit etre deploye sur aiia-tech.com/download/SHA256SUMS.txt
