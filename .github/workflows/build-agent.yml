@@ -5,6 +5,9 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
+permissions:
+  contents: write   # requis pour créer/modifier les GitHub Releases
+
 jobs:
   build:
     strategy:
@@ -83,9 +86,11 @@ jobs:
           path: dist/${{ matrix.artifact }}
           retention-days: 10
 
-  checksum:
+  release:
     needs: build
     runs-on: ubuntu-latest
+    # Uniquement sur push de tag (pas sur workflow_dispatch manuel sans tag)
+    if: startsWith(github.ref, 'refs/tags/')
 
     steps:
       - name: Download all artifacts
@@ -99,17 +104,39 @@ jobs:
           find . -type f \( -name "apollo-agent" -o -name "apollo-agent.exe" \) | sort | while read f; do
             sha256sum "$f" | sed 's|\./[^/]*/||'
           done > ../SHA256SUMS.txt
-          echo ""
           echo "=== SHA256SUMS.txt ==="
           cat ../SHA256SUMS.txt
 
-      - name: Upload SHA256SUMS
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: checksums
-          path: SHA256SUMS.txt
-          retention-days: 10
+          name: "APOLLO Data Auditor ${{ github.ref_name }}"
+          body: |
+            ## APOLLO Data Auditor ${{ github.ref_name }}
 
-      # NOTE: Les binaires sont distribues exclusivement via aiia-tech.com
-      # SHA256SUMS.txt doit etre deploye sur aiia-tech.com/download/SHA256SUMS.txt
-      # en meme temps que les binaires, apres validation manuelle.
+            ### Téléchargement
+
+            | OS      | Fichier              |
+            |---------|----------------------|
+            | Windows | `apollo-agent.exe`   |
+            | Linux   | `apollo-agent`       |
+            | macOS   | `apollo-agent-macos` |
+
+            > **macOS** : binaire uploadé manuellement après build local.
+
+            Vérifier l'intégrité : comparer le hash de votre fichier avec `SHA256SUMS.txt`
+            ```
+            # Linux / macOS
+            sha256sum apollo-agent
+            # Windows (PowerShell)
+            Get-FileHash apollo-agent.exe
+            ```
+
+            Voir [CHANGELOG.md](CHANGELOG.md) pour le détail des changements.
+          files: |
+            artifacts/apollo-agent-windows-latest/apollo-agent.exe
+            artifacts/apollo-agent-ubuntu-latest/apollo-agent
+            SHA256SUMS.txt
+          # macOS absent du CI — uploadé manuellement via : gh release upload <tag> apollo-agent-macos
+          fail_on_unmatched_files: false
+          make_latest: true
