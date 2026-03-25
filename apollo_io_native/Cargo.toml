@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 # Python bindings (0.22+ supports Python 3.13)
-pyo3 = { version = "0.22", features = ["extension-module"] }
+pyo3 = { version = "0.24", features = ["extension-module"] }
 
 # Async runtime
 tokio = { version = "1.35", features = ["rt-multi-thread", "fs", "io-util", "sync"] }
