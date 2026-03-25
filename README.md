@@ -8,6 +8,8 @@
 
 APOLLO Data Auditor scans your files, databases, and cloud. You get your financial exposure in euros and dollars — not an abstract score.
 
+![APOLLO Demo](assets/teaser_readme.gif)
+
 ---
 
 ## Architecture
