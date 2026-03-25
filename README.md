@@ -70,6 +70,34 @@ Enter your API key and start scanning. Get your API key at [apollo.aiia-tech.com
 
 ---
 
+## ⚠️ Windows Troubleshooting
+
+### The window opens and closes immediately
+
+Windows blocks executables downloaded from the internet. Fix:
+
+**Option A — PowerShell (recommended):**
+```powershell
+Unblock-File .\apollo-agent.exe
+.\apollo-agent.exe --serve
+```
+
+**Option B — File Explorer:**
+Right-click `apollo-agent.exe` → Properties → check **Unblock** at the bottom → OK
+
+**Option C — SmartScreen:**
+Right-click → **Run as administrator** → click **More info** → **Run anyway**
+
+### I don't see the error message (window closes too fast)
+
+Open PowerShell **first**, then run the command from inside it — the window stays open and shows the error.
+
+### The browser does not open automatically
+
+Navigate manually to `http://localhost:8052` in your browser. The server is running even if the browser did not open.
+
+---
+
 ## 🔌 Connectors
 
 | Source | Status | Types |
