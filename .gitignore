@@ -25,7 +25,6 @@ agent/packaging/windows/VM_BUILD_PROCEDURE.md
 agent/packaging/linux/DEBIAN_VM_SETUP.md
 MEMO_TEST_INSTALLATEURS.md
 
-# Release binaries — keep only final binaries, not build artifacts
-!agent/packaging/windows/dist/apollo-agent.exe
-!agent/packaging/linux/dist/apollo-agent
-!agent/packaging/macos/dist/apollo-agent
+# Compiled binaries — distributed via GitHub Releases only, never in git
+# Download: https://github.com/ggabrie2025/apollo_data_auditor/releases/latest
+agent/packaging/macos/dist/
