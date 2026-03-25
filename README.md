@@ -5,6 +5,7 @@
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Beta](https://img.shields.io/badge/Status-Beta-orange.svg)]()
+[![Website](https://img.shields.io/badge/Website-apollo.aiia--tech.com-blue.svg)](https://apollo.aiia-tech.com)
 
 APOLLO Data Auditor scans your files, databases, and cloud. You get your financial exposure in euros and dollars — not an abstract score.
 
@@ -130,7 +131,7 @@ All values computed from your actual scan. Zero hardcoded constants.
 
 No credit card. No commitment.
 
-**[Request Beta Access](https://aiia-tech.com)** or email contact@aiia-tech.com
+**[Request Beta Access](https://apollo.aiia-tech.com)** or email contact@aiia-tech.com
 
 ---
 
@@ -145,6 +146,7 @@ No credit card. No commitment.
 
 ## 📖 Documentation
 
+- [APOLLO Website](https://apollo.aiia-tech.com)
 - [Installation Guide](install.sh) (Linux) | [macOS](install_macos.sh) | [Windows](install_windows.ps1)
 - [Security Policy](SECURITY.md)
 - [Third-Party Licenses](THIRD_PARTY_LICENSES.md)
@@ -172,6 +174,9 @@ No credit card. No commitment.
 ## 🏢 About
 
 APOLLO Data Auditor is built by [aiia-tech.com](https://aiia-tech.com), founded by MIT Sloan Executive Program alumni.
+
+- [apollo.aiia-tech.com](https://apollo.aiia-tech.com) — Product page
+- [aiia-tech.com](https://aiia-tech.com) — Company
 
 **Vision:** Democratize enterprise-grade data auditing for European SMEs.
 
