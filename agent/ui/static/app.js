@@ -177,30 +177,17 @@ async function loadHubConnectionStatus() {
 
 /**
  * Apply tier-based UI restrictions.
- * Free tier: lock Start buttons on DB and Cloud (auto-discover stays enabled).
- * Paid tiers (starter/business/enterprise) + admin: everything enabled.
+ * Beta period: all connectors unlocked for all tiers (Sprint 115 L2).
  */
 function applyTierRestrictions() {
-    const tier = AUTH.getTier();
-    const paidTiers = ['starter', 'business', 'enterprise'];
-    const isPaid = paidTiers.includes(tier);
-
     const dbBtn = document.getElementById('db-start-btn');
     const cloudBtn = document.getElementById('cloud-start-btn');
 
     [dbBtn, cloudBtn].forEach(btn => {
         if (!btn) return;
-        if (!isPaid) {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
-            btn.innerHTML = '<i data-lucide="lock" style="width:14px;height:14px;"></i> Plan Starter';
-            if (window.lucide) lucide.createIcons({nodes: [btn]});
-        } else {
-            btn.disabled = false;
-            btn.style.opacity = '';
-            btn.style.cursor = '';
-        }
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.style.cursor = '';
     });
 }
 

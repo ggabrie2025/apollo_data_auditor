@@ -41,31 +41,32 @@ Enterprise solutions exist — at $50K–$150K/year. For a 50–500 employee com
 
 ### 1. Download
 
-```bash
-# Linux
-curl -sSL https://aiia-tech.com/download/install.sh | bash
+Go to **[Releases](https://github.com/ggabrie2025/apollo_data_auditor/releases/latest)** and download the binary for your OS:
 
-# macOS
-curl -sSL https://aiia-tech.com/download/install_macos.sh | bash
-
-# Windows (PowerShell)
-Invoke-WebRequest https://aiia-tech.com/download/install_windows.ps1 -OutFile install.ps1
-.\install.ps1
-```
+| OS | File |
+|----|------|
+| Windows | `apollo-agent.exe` |
+| Linux | `apollo-agent` |
+| macOS | `apollo-agent-macos` |
 
 ### 2. Launch
 
-```bash
-# Linux / macOS
-./apollo-agent --serve
-
-# Windows (PowerShell)
+**Windows** — Open PowerShell in the download folder and run:
+```powershell
 .\apollo-agent.exe --serve
 ```
 
+**Linux / macOS** — Open a terminal and run:
+```bash
+chmod +x ./apollo-agent
+./apollo-agent --serve
+```
+
+> The browser opens automatically on `http://localhost:8052`
+
 ### 3. Use
 
-Open http://localhost:8052 in your browser, enter your API key, and start scanning.
+Enter your API key and start scanning. Get your API key at [apollo.aiia-tech.com](https://apollo.aiia-tech.com).
 
 ---
 
