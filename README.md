@@ -74,12 +74,19 @@ Enter your API key and start scanning. Get your API key at [apollo.aiia-tech.com
 
 ### The window opens and closes immediately
 
-Windows blocks executables downloaded from the internet. Open PowerShell **as administrator** and run:
+Windows blocks executables downloaded from the internet. Use one of these methods:
 
+**Option 1 — PowerShell (as administrator):**
 ```powershell
 Unblock-File .\apollo-agent.exe
 .\apollo-agent.exe --serve
 ```
+
+**Option 2 — File Explorer:**
+Right-click `apollo-agent.exe` → **Properties** → check **Unblock** at the bottom → OK
+
+**Option 3 — SmartScreen popup:**
+If a blue SmartScreen dialog appears → click **More info** → **Run anyway**
 
 ### I don't see the error message (window closes too fast)
 
