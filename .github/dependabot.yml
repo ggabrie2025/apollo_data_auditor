@@ -1,0 +1,39 @@
+version: 2
+
+updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Python (agent)
+  - package-ecosystem: "pip"
+    directory: "/agent"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      python-deps:
+        patterns: ["*"]
+    ignore:
+      # Only patch + minor updates — major versions require manual review
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Rust (apollo_io_native)
+  - package-ecosystem: "cargo"
+    directory: "/apollo_io_native"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      rust-deps:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
