@@ -24,7 +24,11 @@ benchmark_*.py
 agent/packaging/windows/VM_BUILD_PROCEDURE.md
 agent/packaging/linux/DEBIAN_VM_SETUP.md
 MEMO_TEST_INSTALLATEURS.md
+WORKFLOW_DISTRIBUTION.md
 
 # Compiled binaries — distributed via GitHub Releases only, never in git
 # Download: https://github.com/ggabrie2025/apollo_data_auditor/releases/latest
 agent/packaging/macos/dist/
+
+# CI artifacts (generated locally, uploaded via gh release)
+SHA256SUMS.txt
