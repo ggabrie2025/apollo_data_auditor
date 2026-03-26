@@ -1,5 +1,15 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch16] — 2026-03-26
+
+### Fixed
+- KI-130: governance_metrics=null for MongoDB — implement get_governance_metrics()
+  in MongoDBConnector. 6 MongoDB-native KPIs: documentation_coverage (JSON Schema
+  validators), security_compliance (usersInfo root roles), access_control (read-only
+  users ratio), change_tracking (replica set hello command), table_size_distribution
+  (1-CV of collStats storageSize), ai_act_article11 (ML collection name heuristic).
+  hasattr() guard at db_scanner.py:296 now activates automatically for MongoDB.
+
 ## [1.7.R-patch15] — 2026-03-26
 
 ### Fixed

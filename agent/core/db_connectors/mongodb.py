@@ -3,6 +3,7 @@ MongoDB Database Connector
 Implementation for MongoDB document databases
 """
 
+import re
 from typing import Dict, Any, List, Optional
 from motor import motor_asyncio
 from .base import DatabaseConnector, ConnectorCapabilities
@@ -325,14 +326,14 @@ class MongoDBConnector(DatabaseConnector):
             query_upper = query.strip().upper()
 
             # Security: Block write operations
-            forbidden = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER']
-            for keyword in forbidden:
-                if keyword in query_upper:
-                    raise ValueError(f"Write operation '{keyword}' not allowed")
+            # Use word boundaries to avoid false positives (e.g., "update_events" contains "UPDATE")
+            forbidden_keywords = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'GRANT', 'REVOKE']
+            for keyword in forbidden_keywords:
+                if re.search(r'\b' + keyword + r'\b', query_upper):
+                    raise ValueError(f"Forbidden operation detected: {keyword}")
 
             # Extract collection name from query
             # Pattern: "FROM collection_name" or "FROM database.collection"
-            import re
             from_match = re.search(r'FROM\s+(?:`?(\w+)`?\.)?`?(\w+)`?', query, re.IGNORECASE)
             if not from_match:
                 logger.warning(f"Cannot parse collection name from query: {query}")
@@ -400,3 +401,124 @@ class MongoDBConnector(DatabaseConnector):
         """Fermeture connexion MongoDB"""
         if self.connection:
             self.connection.close()
+
+    async def close(self):
+        """Libère la connexion MongoDB (interface DatabaseConnector)"""
+        await self._close_connection()
+
+    async def get_governance_metrics(self) -> Dict[str, float]:
+        """Governance metrics for MongoDB — MongoDB-native equivalent of SQL get_governance_metrics().
+
+        Returns 6 KPIs matching the cross-connector interface:
+        - documentation_coverage : % collections with a JSON Schema validator
+        - security_compliance    : % users without root-level roles (root, __system)
+        - access_control         : % users with only read roles (no write/admin roles)
+        - change_tracking        : 1.0 if replica set (change streams possible), 0.0 if standalone
+        - table_size_distribution: 1 - CV(storageSize per collection), clamped [0, 1]
+        - ai_act_article11       : ML collection name heuristic (same logic as PostgreSQL)
+        """
+        database = self.config.get("database", "admin")
+        db = self.connection[database]
+
+        # 1. documentation_coverage — % collections with $jsonSchema validator
+        try:
+            col_cursor = await db.list_collections()
+            all_cols = await col_cursor.to_list(length=None)
+            total = len(all_cols)
+            documented = sum(
+                1 for c in all_cols
+                if c.get("options", {}).get("validator", {}).get("$jsonSchema")
+            )
+            documentation_coverage = (documented / total) if total > 0 else 0.0
+        except Exception:
+            documentation_coverage = 0.0
+
+        # 2. security_compliance — % users without root-level roles
+        try:
+            user_info = await self.connection.admin.command("usersInfo", 1)
+            users = user_info.get("users", [])
+            root_roles = {"root", "__system", "clusterAdmin"}
+            total = len(users)
+            safe = sum(
+                1 for u in users
+                if not any(
+                    (r.get("role") if isinstance(r, dict) else r) in root_roles
+                    for r in u.get("roles", [])
+                )
+            )
+            security_compliance = (safe / total) if total > 0 else 0.5
+        except Exception:
+            security_compliance = 0.5
+
+        # 3. access_control — % users with only read-level roles
+        try:
+            user_info = await self.connection.admin.command("usersInfo", 1)
+            users = user_info.get("users", [])
+            write_roles = {"readWrite", "dbOwner", "dbAdmin", "root", "clusterAdmin", "__system"}
+            total = len(users)
+            read_only = sum(
+                1 for u in users
+                if not any(
+                    (r.get("role") if isinstance(r, dict) else r) in write_roles
+                    for r in u.get("roles", [])
+                )
+            )
+            access_control = (read_only / total) if total > 0 else 0.5
+        except Exception:
+            access_control = 0.5
+
+        # 4. change_tracking — 1.0 if replica set member (change streams enabled), 0.0 if standalone
+        try:
+            hello = await self.connection.admin.command("hello")
+            change_tracking = 1.0 if hello.get("setName") else 0.0
+        except Exception:
+            change_tracking = 0.0
+
+        # 5. table_size_distribution — 1 - CV(storageSize), clamped [0, 1]
+        try:
+            col_names = await db.list_collection_names()
+            col_names = [c for c in col_names if not c.startswith("system.")]
+            sizes = []
+            for col_name in col_names:
+                size = await self.get_table_size(database, col_name)
+                if size is not None:
+                    sizes.append(float(size))
+            if len(sizes) >= 2:
+                mean = sum(sizes) / len(sizes)
+                std = (sum((x - mean) ** 2 for x in sizes) / len(sizes)) ** 0.5
+                cv = (std / mean) if mean > 0 else 0.0
+                table_size_distribution = max(0.0, min(1.0, 1.0 - cv))
+            else:
+                table_size_distribution = 1.0
+        except Exception:
+            table_size_distribution = 0.5
+
+        # 6. ai_act_article11 — ML collection name heuristic (mirrors PostgreSQL)
+        try:
+            col_names = await db.list_collection_names()
+            ML_TABLE_KEYWORDS = {"model", "prediction", "training", "feature", "ml_", "ai_", "inference"}
+            VERSION_KEYWORDS = {"version", "registry", "run", "experiment"}
+            LOG_TABLE_KEYWORDS = {"log", "audit", "history", "tracking"}
+            names_lower = [c.lower() for c in col_names]
+            score = 0.0
+            ml_cols = [n for n in names_lower if any(kw in n for kw in ML_TABLE_KEYWORDS)]
+            if ml_cols:
+                score += 0.40
+                versioned = [n for n in ml_cols if any(kw in n for kw in VERSION_KEYWORDS)]
+                if versioned:
+                    score += 0.30 * (len(versioned) / len(ml_cols))
+            log_cols = [n for n in names_lower if any(kw in n for kw in LOG_TABLE_KEYWORDS)]
+            if log_cols:
+                score += 0.30
+            ai_act_article11 = min(score, 1.0)
+        except Exception:
+            ai_act_article11 = 0.0
+
+        return {
+            "documentation_coverage": round(documentation_coverage, 4),
+            "security_compliance": round(security_compliance, 4),
+            "access_control": round(access_control, 4),
+            "change_tracking": round(change_tracking, 4),
+            "table_size_distribution": round(table_size_distribution, 4),
+            "ai_act_article11": round(ai_act_article11, 4),
+        }
