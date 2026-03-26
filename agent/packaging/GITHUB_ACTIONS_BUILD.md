@@ -205,13 +205,12 @@ Ajoute ~5 min au build. Necessaire quand le Rust evolue souvent.
 | ~~**P3**~~ | ~~Tester le build CI Windows + Linux~~ | ~~FAIT~~ | CI operationnel depuis patch13 — Windows `.exe` + Linux binaire produits automatiquement sur tag `v*` |
 | ~~**P4**~~ | ~~Compile Rust dans le CI (Option B — maturin)~~ | ~~FAIT~~ | `maturin build --release` dans `build-agent.yml` — pas de prebuilt a commiter |
 | ~~**P5**~~ | ~~Tags release → release automatique avec binaires~~ | ~~FAIT~~ | `v1.7.R-patch13` → `v1.7.R-patch18` (2026-03-20 → 2026-03-26). macOS uploade manuellement via `gh release upload` |
-| **P6** | Passer le repo en **public** pour traction | Decision business + audit IP | En attente (voir pre-requis ci-dessous) |
+| ~~**P6**~~ | ~~Passer le repo en **public** pour traction~~ | ~~FAIT~~ | Repo public : https://github.com/ggabrie2025/apollo_data_auditor — releases et downloads actifs |
 
-**Pre-requis avant P6 (passage public) :**
-- Retirer commentaires explicatifs de `exclusions.yaml`
-- Verifier qu'aucun secret n'est dans l'historique git (`git log -p | grep -i key\|token\|password`)
-- Audit `strings` sur le binaire PyInstaller (regex PII, sampling rates)
-- Decision : pousser le source Python ou uniquement les binaires compiles
+**P6 FAIT — Repo public depuis 2026-03-26.**
+URL : https://github.com/ggabrie2025/apollo_data_auditor
+Releases actives : `v1.7.R`, `v1.7.R-patch14`, `v1.7.R-patch15`, `v1.7.R-patch18` (Latest)
+Downloads live sur GitHub CDN.
 
 ## Avantages GitHub Actions
 
