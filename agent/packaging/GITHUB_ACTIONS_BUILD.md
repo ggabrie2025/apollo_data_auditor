@@ -98,7 +98,7 @@ Le bytecode .pyc est reversible (`uncompyle6`). Mitigations :
 ### Fichier : `.github/workflows/build-agent.yml`
 
 ```yaml
-name: Build Apollo Data Auditor
+name: Build Apollo Agent
 
 on:
   push:
@@ -202,10 +202,10 @@ Ajoute ~5 min au build. Necessaire quand le Rust evolue souvent.
 | ~~**P0**~~ | ~~Creer le repo GitHub (private)~~ | ~~FAIT~~ | `ggabrie2025/apollo_data_auditor` |
 | ~~**P1**~~ | ~~Premier commit : README + LICENSE~~ | ~~FAIT~~ | github_push operationnel |
 | ~~**P2**~~ | ~~`.github/workflows/build-agent.yml` (PyInstaller)~~ | ~~FAIT~~ | `build-agent.yml` deploye |
-| ~~**P3**~~ | ~~Tester le build CI Windows + Linux~~ | ~~FAIT~~ | Build valide depuis patch5 (2026-03-18) |
-| ~~**P4**~~ | ~~Pre-build Rust `.pyd`/`.so` x64 et commit~~ | ~~FAIT~~ | `apollo_io_native/prebuilt/` commite |
-| ~~**P5**~~ | ~~Tag `v1.7.R` → release automatique avec binaires~~ | ~~FAIT~~ | v1.7.R-patch10 (2026-03-18) |
-| **P6** | Passer le repo en **public** pour traction | Decision business + audit IP | — |
+| ~~**P3**~~ | ~~Tester le build CI Windows + Linux~~ | ~~FAIT~~ | CI operationnel depuis patch13 — Windows `.exe` + Linux binaire produits automatiquement sur tag `v*` |
+| ~~**P4**~~ | ~~Compile Rust dans le CI (Option B — maturin)~~ | ~~FAIT~~ | `maturin build --release` dans `build-agent.yml` — pas de prebuilt a commiter |
+| ~~**P5**~~ | ~~Tags release → release automatique avec binaires~~ | ~~FAIT~~ | `v1.7.R-patch13` → `v1.7.R-patch18` (2026-03-20 → 2026-03-26). macOS uploade manuellement via `gh release upload` |
+| **P6** | Passer le repo en **public** pour traction | Decision business + audit IP | En attente (voir pre-requis ci-dessous) |
 
 **Pre-requis avant P6 (passage public) :**
 - Retirer commentaires explicatifs de `exclusions.yaml`
@@ -253,10 +253,8 @@ Windows/Linux passent par GitHub Actions car les VM UTM ARM ne produisent pas de
       pyinstaller agent/packaging/macos/apollo_agent.spec --clean --noconfirm
       cp dist/apollo-agent ~/github_push/agent/packaging/macos/dist/
 
-[ ] 5. Mettre a jour SHA256SUMS.txt (apres build CI)
-      # SHA256SUMS.txt contient les 3 plateformes — genere par GH Actions et copie manuellement
-      # Voir procedure post-MAJ etape 4 : cp /tmp/checksums/SHA256SUMS.txt ~/github_push/SHA256SUMS.txt
-      # Si macOS seul rebuild en local : mettre a jour uniquement la ligne apollo-agent-macos
+[ ] 5. Mettre a jour SHA256SUMS.txt (si binaire macOS rebuild)
+      cd ~/github_push && shasum -a 256 agent/packaging/macos/dist/apollo-agent > SHA256SUMS.txt
 
 [ ] 6. Verifier qu'aucun secret ne fuit
       cd ~/github_push && grep -rn "API_KEY\|TOKEN\|PASSWORD\|SECRET" agent/ --include="*.py" | grep -v "test\|example\|placeholder"
