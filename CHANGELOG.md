@@ -1,5 +1,12 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch20] — 2026-03-26
+
+### Fixed
+- KI-119: ram_total_bytes=0 instead of null when psutil absent — init
+  ram_total/ram_available to None (was 0). ImportError now emits JSON null
+  for D180/D181. Same fix for disk OSError fallback D184/D185.
+
 ## [1.7.R-patch19] — 2026-03-26
 
 ### Fixed

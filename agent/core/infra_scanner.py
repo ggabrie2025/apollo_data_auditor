@@ -906,7 +906,9 @@ def _collect_smart_linux() -> Optional[List[Dict[str, Any]]]:
             # For NVMe, some stats are available
             if dev_name.startswith("nvme"):
                 # hwmon temperature
-                for hwmon in os.listdir(f"/sys/block/{dev_name}/device/hwmon/") if os.path.exists(f"/sys/block/{dev_name}/device/hwmon/") else []:
+                hwmon_path = f"/sys/block/{dev_name}/device/hwmon/"
+                hwmon_entries = os.listdir(hwmon_path) if os.path.exists(hwmon_path) else []
+                for hwmon in hwmon_entries:
                     temp_path = f"/sys/block/{dev_name}/device/hwmon/{hwmon}/temp1_input"
                     try:
                         with open(temp_path, "r") as f:
@@ -971,8 +973,8 @@ def scan_infrastructure(source_path: Optional[str] = None) -> Dict[str, Any]:
     cpu_count = os.cpu_count() or 0
 
     # RAM via psutil if available
-    ram_total = 0
-    ram_available = 0
+    ram_total = None
+    ram_available = None
     try:
         import psutil
         mem = psutil.virtual_memory()
@@ -988,8 +990,8 @@ def scan_infrastructure(source_path: Optional[str] = None) -> Dict[str, Any]:
         disk_total_bytes = disk_usage.total
         disk_free_bytes = disk_usage.free
     except OSError:
-        disk_total_bytes = 0
-        disk_free_bytes = 0
+        disk_total_bytes = None
+        disk_free_bytes = None
 
     # --- Collect all hardware data ---
     disks = collect_disks()
