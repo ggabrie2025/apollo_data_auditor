@@ -239,6 +239,9 @@ class DBScanner:
             result.tables = tables
             result.tables_count = len(tables)
             result.total_rows = sum(t.row_count for t in tables)
+            size_values = [t.size_bytes for t in tables if t.size_bytes is not None]
+            result.total_size_bytes = sum(size_values) if size_values else None
+            result.tables_scanned = len(tables)  # Default: full scan (overridden below if differential)
 
             # Step 4: Differential (if snapshot exists)
             diff_result = None
@@ -289,8 +292,8 @@ class DBScanner:
                     tables
                 )
 
-            # Step 7: Collect governance metrics (Sprint 18 - PostgreSQL only)
-            if self.config.db_type == "postgresql" and hasattr(self.connector, 'get_governance_metrics'):
+            # Step 7: Collect governance metrics (PostgreSQL + MySQL)
+            if hasattr(self.connector, 'get_governance_metrics'):
                 try:
                     logger.info(f"[DB-Scanner] Collecting governance metrics...")
                     result.governance_metrics = await self.connector.get_governance_metrics()
@@ -770,7 +773,7 @@ async def scan_database(config: DBScanConfig) -> DBScanResult:
             port=5433,
             database="apollo_test",
             username="apollo_user",
-            password="<your_password>"
+            password="apollo_pass_2025"
         )
         result = await scan_database(config)
     """

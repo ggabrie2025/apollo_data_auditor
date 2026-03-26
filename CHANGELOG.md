@@ -1,5 +1,15 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch15] — 2026-03-26
+
+### Fixed
+- KI-128: tables_scanned=0 — add default assignment before differential branch.
+  Full scan mode now sets tables_scanned=len(tables) before the differential
+  override block. Previously always 0 in non-differential mode.
+- KI-129: total_size_bytes=null — aggregate sum(size_bytes) from scanned tables.
+  size_values list comprehension skips None entries; result is None only if all
+  tables have no size_bytes data.
+
 ## [1.7.R-patch13] — 2026-03-20
 
 ### Fixed
