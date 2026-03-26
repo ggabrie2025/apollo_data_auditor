@@ -352,6 +352,42 @@ async function startFilesAudit() {
     }
 }
 
+// KI-073: fetch full result via REST after SSE complete signal
+const RESULTS_ENDPOINT = {
+    files:     (id) => `/api/v2/files/results/${id}`,
+    databases: (id) => `/api/v2/databases/results/${id}`,
+    cloud:     (id) => `/api/v2/cloud/results/${id}`,
+    directory: (id) => `/api/v2/directory/results/${id}`,
+    app:       (id) => `/api/v2/app/results/${id}`
+};
+
+async function fetchAndStoreResult(type, sessionId, exportBtnId) {
+    const maxRetries = 3;
+    const retryDelayMs = 800;
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const resp = await fetch(RESULTS_ENDPOINT[type](sessionId));
+            if (!resp.ok) {
+                throw new Error(`HTTP ${resp.status}`);
+            }
+            const data = await resp.json();
+            state[type === 'databases' ? 'db' : type].results = data.result || data;
+            document.getElementById(exportBtnId).style.display = 'block';
+            return;
+        } catch (err) {
+            lastError = err;
+            if (attempt < maxRetries) {
+                await new Promise(r => setTimeout(r, retryDelayMs));
+            }
+        }
+    }
+
+    console.error(`[KI-073] fetchAndStoreResult failed for ${type}/${sessionId}:`, lastError);
+    showStatus(`Export unavailable: could not fetch ${type} results (${lastError.message})`, 'error');
+}
+
 function connectFilesSSE(sessionId) {
     const eventSource = new EventSource(`/api/v2/files/progress/${sessionId}`);
     state.files.eventSource = eventSource;
@@ -402,9 +438,6 @@ function resetFilesStats() {
 }
 
 function onFilesComplete(data) {
-    // Store the full result (same JSON sent to Hub) for export
-    state.files.results = data.result || data;
-
     const btn = document.getElementById('files-start-btn');
     btn.disabled = false;
     btn.textContent = 'Start Files Audit';
@@ -419,9 +452,6 @@ function onFilesComplete(data) {
         updateFilesStats(data.stats);
     }
 
-    // Show export button
-    document.getElementById('files-export-btn').style.display = 'block';
-
     // Show scoring placeholder (Cloud mode)
     document.getElementById('files-scoring-placeholder').style.display = 'block';
 
@@ -435,6 +465,10 @@ function onFilesComplete(data) {
         showStatus('Files audit complete! Check Hub Dashboard for scores.', 'success');
     } else if (data.error) {
         showStatus('Files audit error: ' + data.error, 'error');
+    }
+
+    if (state.files.sessionId) {
+        fetchAndStoreResult('files', state.files.sessionId, 'files-export-btn');
     }
 
     console.log('[AUDIT] Files complete:', data);
@@ -688,9 +722,6 @@ function resetDbStats() {
 }
 
 function onDbComplete(data) {
-    // Store the full result (same JSON sent to Hub) for export
-    state.db.results = data.result || data;
-
     const btn = document.getElementById('db-start-btn');
     btn.disabled = false;
     btn.textContent = 'Start DB Audit';
@@ -704,9 +735,6 @@ function onDbComplete(data) {
         updateDbStats(data.stats);
     }
 
-    // Show export button
-    document.getElementById('db-export-btn').style.display = 'block';
-
     document.getElementById('db-scoring-placeholder').style.display = 'block';
 
     // Display errors if any (Sprint 39)
@@ -718,6 +746,10 @@ function onDbComplete(data) {
         showStatus('Database audit complete! Check Hub Dashboard for scores.', 'success');
     } else if (data.error) {
         showStatus('Database audit error: ' + data.error, 'error');
+    }
+
+    if (state.db.sessionId) {
+        fetchAndStoreResult('databases', state.db.sessionId, 'db-export-btn');
     }
 
     console.log('[AUDIT] DB complete:', data);
@@ -1177,8 +1209,6 @@ function formatBytes(bytes) {
 }
 
 function onCloudComplete(data) {
-    state.cloud.results = data.result || data;
-
     const btn = document.getElementById('cloud-start-btn');
     btn.disabled = false;
     btn.textContent = 'Start Cloud Audit';
@@ -1192,9 +1222,6 @@ function onCloudComplete(data) {
         updateCloudStats(data.stats);
     }
 
-    // Show export button
-    document.getElementById('cloud-export-btn').style.display = 'block';
-
     // Show scoring placeholder
     document.getElementById('cloud-scoring-placeholder').style.display = 'block';
 
@@ -1207,6 +1234,10 @@ function onCloudComplete(data) {
         showStatus('Cloud audit complete! Check Hub Dashboard for scores.', 'success');
     } else if (data.error) {
         showStatus('Cloud audit error: ' + data.error, 'error');
+    }
+
+    if (state.cloud.sessionId) {
+        fetchAndStoreResult('cloud', state.cloud.sessionId, 'cloud-export-btn');
     }
 
     console.log('[AUDIT] Cloud complete:', data);
@@ -1453,8 +1484,6 @@ function resetDirectoryStats() {
 }
 
 function onDirectoryComplete(data) {
-    state.directory.results = data.result || data;
-
     const btn = document.getElementById('dir-start-btn');
     btn.disabled = false;
     btn.textContent = 'Start Directory Audit';
@@ -1468,9 +1497,6 @@ function onDirectoryComplete(data) {
         updateDirectoryStats(data.stats);
     }
 
-    // Show export button
-    document.getElementById('dir-export-btn').style.display = 'block';
-
     // Show scoring placeholder
     document.getElementById('dir-scoring-placeholder').style.display = 'block';
 
@@ -1483,6 +1509,10 @@ function onDirectoryComplete(data) {
         showStatus('Directory audit complete! Check Hub Dashboard for scores.', 'success');
     } else if (data.error) {
         showStatus('Directory audit error: ' + data.error, 'error');
+    }
+
+    if (state.directory.sessionId) {
+        fetchAndStoreResult('directory', state.directory.sessionId, 'dir-export-btn');
     }
 
     console.log('[AUDIT] Directory complete:', data);
@@ -1665,8 +1695,6 @@ function resetAppStats() {
 }
 
 function onAppComplete(data) {
-    state.app.results = data.result || data;
-
     const btn = document.getElementById('app-start-btn');
     btn.disabled = false;
     btn.textContent = 'Start App Audit';
@@ -1680,9 +1708,6 @@ function onAppComplete(data) {
         updateAppStats(data.stats);
     }
 
-    // Show export button
-    document.getElementById('app-export-btn').style.display = 'block';
-
     // Show scoring placeholder
     document.getElementById('app-scoring-placeholder').style.display = 'block';
 
@@ -1695,6 +1720,10 @@ function onAppComplete(data) {
         showStatus('App audit complete! Check Hub Dashboard for scores.', 'success');
     } else if (data.error) {
         showStatus('App audit error: ' + data.error, 'error');
+    }
+
+    if (state.app.sessionId) {
+        fetchAndStoreResult('app', state.app.sessionId, 'app-export-btn');
     }
 
     console.log('[AUDIT] App complete:', data);

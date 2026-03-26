@@ -1,5 +1,15 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch18] — 2026-03-26
+
+### Changed
+- Beta period: all connectors unlocked for all tiers (Sprint 115 L2).
+  DB and Cloud scan buttons no longer locked for free tier during beta.
+
+### Docs
+- VM_BUILD_PROCEDURE.md: add patch13 validation results (9 Windows + 8 Linux
+  connectors, 102 PASS / 0 FAIL E2E on 2026-03-20).
+
 ## [1.7.R-patch17] — 2026-03-26
 
 ### Fixed
