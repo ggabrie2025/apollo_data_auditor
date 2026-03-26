@@ -430,7 +430,8 @@ class MongoDBConnector(DatabaseConnector):
                 if c.get("options", {}).get("validator", {}).get("$jsonSchema")
             )
             documentation_coverage = (documented / total) if total > 0 else 0.0
-        except Exception:
+        except Exception as e:
+            logger.warning(f"[governance/documentation_coverage] MongoDB query failed: {e}")
             documentation_coverage = 0.0
 
         # 2. security_compliance — % users without root-level roles
@@ -447,7 +448,8 @@ class MongoDBConnector(DatabaseConnector):
                 )
             )
             security_compliance = (safe / total) if total > 0 else 0.5
-        except Exception:
+        except Exception as e:
+            logger.warning(f"[governance/security_compliance] usersInfo failed: {e}")
             security_compliance = 0.5
 
         # 3. access_control — % users with only read-level roles
@@ -464,14 +466,16 @@ class MongoDBConnector(DatabaseConnector):
                 )
             )
             access_control = (read_only / total) if total > 0 else 0.5
-        except Exception:
+        except Exception as e:
+            logger.warning(f"[governance/access_control] usersInfo failed: {e}")
             access_control = 0.5
 
         # 4. change_tracking — 1.0 if replica set member (change streams enabled), 0.0 if standalone
         try:
             hello = await self.connection.admin.command("hello")
             change_tracking = 1.0 if hello.get("setName") else 0.0
-        except Exception:
+        except Exception as e:
+            logger.warning(f"[governance/change_tracking] hello command failed: {e}")
             change_tracking = 0.0
 
         # 5. table_size_distribution — 1 - CV(storageSize), clamped [0, 1]
@@ -490,7 +494,8 @@ class MongoDBConnector(DatabaseConnector):
                 table_size_distribution = max(0.0, min(1.0, 1.0 - cv))
             else:
                 table_size_distribution = 1.0
-        except Exception:
+        except Exception as e:
+            logger.warning(f"[governance/table_size_distribution] collStats failed: {e}")
             table_size_distribution = 0.5
 
         # 6. ai_act_article11 — ML collection name heuristic (mirrors PostgreSQL)
@@ -511,7 +516,8 @@ class MongoDBConnector(DatabaseConnector):
             if log_cols:
                 score += 0.30
             ai_act_article11 = min(score, 1.0)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"[governance/ai_act_article11] listCollectionNames failed: {e}")
             ai_act_article11 = 0.0
 
         return {

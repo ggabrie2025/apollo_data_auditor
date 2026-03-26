@@ -1,5 +1,12 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch17] — 2026-03-26
+
+### Fixed
+- F5: add logger.warning to all 6 except blocks in get_governance_metrics().
+  Silent exception swallowing replaced with named exception + warning log.
+  Pattern: [governance/<metric>] <command> failed: <error>
+
 ## [1.7.R-patch16] — 2026-03-26
 
 ### Fixed
