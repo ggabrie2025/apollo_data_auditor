@@ -1,5 +1,5 @@
 ---
-title: "Deblocage OS - Apollo Data Auditor"
+title: "Deblocage OS - Apollo Agent"
 agent: redactor
 project_id: PRJ-APOLLO
 date: 2026-03-05
@@ -9,9 +9,9 @@ type: guide
 status: active
 ---
 
-# Apollo Data Auditor - Deblocage OS
+# Apollo Agent - Deblocage OS
 
-Ce document couvre les situations ou macOS ou Windows bloque l'execution du binaire Apollo Data Auditor.
+Ce document couvre les situations ou macOS ou Windows bloque l'execution du binaire Apollo Agent.
 
 ---
 
@@ -77,6 +77,23 @@ Puis lancer normalement :
 Unblock-File -Path "C:\chemin\vers\apollo-agent.exe"
 ```
 
+### Quick Start beta testeur (depuis Downloads)
+
+Copiez-collez dans PowerShell apres avoir telecharge `apollo-agent.exe` :
+
+```powershell
+cd $env:USERPROFILE\Downloads; Unblock-File .\apollo-agent.exe; .\apollo-agent.exe --serve
+```
+
+L'agent affiche l'URL dans le terminal et ouvre le navigateur automatiquement :
+
+```
+Apollo Agent V1.7.R — UI starting on http://localhost:8052/static/login.html
+```
+
+> **Note port** : si 8052 est occupe, l'agent choisit automatiquement un port libre entre 8052 et 8099.
+> L'URL exacte est toujours affichee dans le terminal au demarrage.
+
 ---
 
 ## Windows - Antivirus (faux positif)
@@ -122,7 +139,7 @@ apollo-agent.exe --version
 Resultat attendu :
 
 ```
-Apollo Data Auditor v1.7.R
+Apollo Agent v1.7.R
 ```
 
 ---
