@@ -1,5 +1,14 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch19] — 2026-03-26
+
+### Fixed
+- KI-118: MongoDB completeness_score=0.0, zone=null, sample_rate=null — wire
+  _compute_quality_metrics + smart_sampler into MongoDB branch of _extract_schema.
+  New elif mongodb in _compute_quality_metrics: motor aggregate pipeline
+  $group/$sum/$cond/$ifNull to compute null_pcts per field (guard <= 100K docs).
+  MongoDB collections now report real completeness_score, zone, sample_rate.
+
 ## [1.7.R-patch18] — 2026-03-26
 
 ### Changed

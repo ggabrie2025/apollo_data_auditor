@@ -528,6 +528,24 @@ class DBScanner:
                     columns=columns_list,
                     size_bytes=coll_size,
                 )
+
+                # KI-118: quality metrics (mirrors SQL branch lines 409-469)
+                quality = await self._compute_quality_metrics(
+                    database_name, collection_name, columns_list, doc_count
+                )
+                table_meta.null_percentage = quality["null_percentage"]
+                table_meta.duplicate_count = quality["duplicate_count"]
+                table_meta.completeness_score = quality["completeness_score"]
+
+                # KI-118: smart sampling zone (mirrors SQL branch lines 472-478)
+                if self.smart_sampler and doc_count > 0:
+                    sample_size, zone, rate = self.smart_sampler.get_sample_info(
+                        collection_name, database_name, doc_count
+                    )
+                    table_meta.zone = zone
+                    table_meta.sample_rate = rate
+                    table_meta.sample_size = sample_size
+
                 tables.append(table_meta)
 
         return tables, schemas_found
@@ -584,6 +602,32 @@ class DBScanner:
                                 null_pcts[c] = null_pct
             except Exception as e:
                 logger.warning(f"[DB-Scanner] Quality metrics query failed for {schema}.{table}: {e}")
+
+        # MongoDB: aggregate-based null count (only for collections < 100K documents)
+        elif self.config.db_type == "mongodb" and row_count <= 100_000:
+            try:
+                col_names = [c['name'] for c in columns[:30]]  # Cap at 30 fields
+                db_conn = self.connector.connection[schema]
+                collection = db_conn[table]
+                group_fields = {
+                    f"c{i}": {"$sum": {"$cond": [{"$ifNull": [f"${c}", False]}, 0, 1]}}
+                    for i, c in enumerate(col_names)
+                }
+                group_fields["total"] = {"$sum": 1}
+                pipeline = [{"$group": {"_id": None, **group_fields}}]
+                cursor = collection.aggregate(pipeline)
+                results = await cursor.to_list(length=1)
+                if results:
+                    row = results[0]
+                    total = row.get("total", 0)
+                    if total > 0:
+                        for i, c in enumerate(col_names):
+                            non_null = row.get(f"c{i}", total)
+                            null_pct = round((1 - non_null / total) * 100, 2)
+                            if null_pct > 0:
+                                null_pcts[c] = null_pct
+            except Exception as e:
+                logger.warning(f"[DB-Scanner] MongoDB quality metrics failed for {schema}.{table}: {e}")
 
         # Compute completeness score from null percentages
         if null_pcts:
