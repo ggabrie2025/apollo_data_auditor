@@ -136,7 +136,7 @@ class LogAnalyzer:
         # Check size limit
         max_bytes = self.config.max_log_size_mb * 1024 * 1024
         if file_size > max_bytes:
-            # TODO: Read only last N MB for large files
+            # TODO(KI-135): Read only last N MB for large files
             pass
 
         result = LogAnalysisResult(
