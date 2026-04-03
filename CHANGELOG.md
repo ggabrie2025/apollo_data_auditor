@@ -1,5 +1,14 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch21] — 2026-04-04
+
+### Changed
+- Sprint 151: Agent UI Redesign — sidebar navigation, toast notifications,
+  message slots system. Improved layout consistency across scan views.
+- hub-link-section fixed bottom: Stop Scan + Reset Dashboard buttons always
+  visible regardless of scroll position.
+- Footer unified: single fixed bar with stop/reset buttons + copyright.
+
 ## [1.7.R-patch20] — 2026-03-26
 
 ### Fixed

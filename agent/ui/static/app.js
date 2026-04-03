@@ -42,22 +42,47 @@ const state = {
     }
 };
 
-// === TAB NAVIGATION (Sprint 87) ===
+// === TAB NAVIGATION (Sprint 151 — sidebar) ===
 function switchTab(tabId) {
-    // Hide all panels
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    // Deactivate all tab buttons
-    document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
-    // Show selected panel
+    document.querySelectorAll('.agent-panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+    document.querySelectorAll('.sidebar-nav-item').forEach(b => b.classList.remove('active'));
     const panel = document.getElementById('panel-' + tabId);
-    if (panel) panel.classList.add('active');
-    // Activate tab button
+    if (panel) { panel.classList.add('active'); panel.style.display = ''; }
     const btn = document.getElementById('tab-btn-' + tabId);
     if (btn) btn.classList.add('active');
-    // Reinitialize Lucide icons for newly visible content
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// === TOAST — Sprint 151 (identique dashboard-v3) ===
+function showToast(message, type) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
     }
+    const existing = container.querySelectorAll('.toast');
+    if (existing.length >= 3) existing[0].remove();
+    const icons = { success: 'check-circle', error: 'x-circle', warning: 'alert-triangle', info: 'info' };
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${type}`;
+    toast.innerHTML = `<i data-lucide="${icons[type] || 'info'}" style="width:16px;height:16px;flex-shrink:0;"></i><span>${message}</span>`;
+    container.appendChild(toast);
+    if (typeof lucide !== 'undefined') lucide.createIcons({ nameAttr: 'data-lucide' });
+    setTimeout(() => {
+        toast.classList.add('removing');
+        toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    }, 3000);
+}
+
+// === MSG SLOT — feedback inline par panel ===
+function showMsgSlot(sourceId, msg, type) {
+    const slot = document.getElementById(sourceId + '-msg');
+    if (!slot) return;
+    slot.textContent = msg;
+    slot.className = 'msg-slot ' + (type === 'error' ? 'er' : 'ok');
+    setTimeout(() => { slot.className = 'msg-slot'; }, 5000);
 }
 
 // === XSS Protection ===
@@ -805,20 +830,7 @@ function downloadJson(data, filename) {
 // ============================================================================
 
 function showStatus(message, type) {
-    const section = document.getElementById('status-messages');
-    const content = document.getElementById('status-content');
-
-    section.style.display = 'block';
-    content.innerHTML = `
-        <p class="${type === 'success' ? 'success-indicator' : 'error-indicator'}">
-            ${type === 'success' ? '✓' : '✗'} ${escapeHtml(message)}
-        </p>
-    `;
-
-    // Auto-hide after 10s
-    setTimeout(() => {
-        section.style.display = 'none';
-    }, 10000);
+    showToast(message, type === 'success' ? 'success' : 'error');
 }
 
 // ============================================================================
@@ -1077,7 +1089,7 @@ async function listCloudDrives() {
             select.innerHTML += `<option value="${escapeHtml(drive.id)}">${escapeHtml(drive.name)} (${escapeHtml(drive.driveType)})</option>`;
         });
 
-        showStatus(`Found ${state.cloud.drives.length} drive(s) - "Scan All" selected by default`, 'success');
+        showMsgSlot('cloud', `${state.cloud.drives.length} drive(s) trouvé(s) — "Scan All" sélectionné`, 'success');
         console.log('[CLOUD] Drives listed:', state.cloud.drives);
 
     } catch (err) {
@@ -1353,12 +1365,12 @@ async function testDirectoryConnection() {
         }
 
         const data = await response.json();
-        showStatus(`Connection OK - ${data.directory_type} - ${data.users_count} users`, 'success');
+        showMsgSlot('dir', `OK — ${data.directory_type}, ${data.users_count} users`, 'success');
         console.log('[DIRECTORY] Test connection:', data);
 
     } catch (err) {
         console.error('Directory test error:', err);
-        showStatus('Connection failed: ' + err.message, 'error');
+        showMsgSlot('dir', 'Connection failed: ' + err.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Test Connection';
@@ -1580,12 +1592,12 @@ async function testAppConnection() {
         }
 
         const data = await response.json();
-        showStatus(`Connection OK - ${data.app_type} - ${data.company_name}`, 'success');
+        showMsgSlot('app', `OK — ${data.app_type}, ${data.company_name}`, 'success');
         console.log('[APP] Test connection:', data);
 
     } catch (err) {
         console.error('App test error:', err);
-        showStatus('Connection failed: ' + err.message, 'error');
+        showMsgSlot('app', 'Connection failed: ' + err.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Test Connection';

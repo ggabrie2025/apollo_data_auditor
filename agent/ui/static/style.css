@@ -1124,9 +1124,44 @@ select:focus {
     flex-shrink: 0;
 }
 
-/* Action buttons row in hub-link section */
-.action-buttons-row {
-    padding: var(--space-4) 0;
+/* ============================================
+   FOOTER FIXE — barre unique stop/reset + copyright
+   ============================================ */
+.agent-footer {
+    position: fixed;
+    bottom: 0;
+    left: 220px;
+    right: 0;
+    background: #1e1e2e;
+    color: #9ca3af;
+    border-top: 1px solid #2d2d3f;
+    z-index: 50;
+}
+
+.footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 1.5rem;
+}
+
+.footer-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.footer-copy {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: #9ca3af;
+}
+
+/* Boutons compacts dans le footer */
+.footer-danger-btn {
+    padding: 6px 14px !important;
+    min-width: 130px !important;
+    font-size: 0.875rem !important;
+    box-shadow: none !important;
 }
 
 /* ============================================
@@ -1284,4 +1319,205 @@ select:focus {
 .error-msg {
     color: var(--gray-700);
     word-break: break-word;
+}
+
+/* ============================================================================
+   SPRINT 151 — Agent UI Redesign
+   Alignement dashboard-v3 : sidebar, tokens typo, toasts, msg-slot
+   ============================================================================ */
+
+/* Design tokens — alignement dashboard-v3 */
+:root {
+    --fs-xs:     0.65rem;
+    --fs-sm:     0.75rem;
+    --fs-base:   0.85rem;
+    --fs-md:     1.1rem;
+    --fw-normal: 400;
+    --fw-semi:   600;
+    --fw-bold:   800;
+    --c-text:        #1E293B;
+    --c-text-light:  #64748B;
+    --c-text-muted:  #9CA3AF;
+    --c-success:     #059669;
+    --c-warning:     #F59E0B;
+    --c-danger:      #DC2626;
+    --c-accent:      #6366F1;
+    --c-info:        #2563EB;
+}
+
+/* Body background — même que dashboard-v3 */
+body {
+    background: #F3F4F6;
+}
+
+/* ============================================
+   SIDEBAR — Sprint 151
+   ============================================ */
+.agent-sidebar {
+    position: fixed;
+    left: 0;
+    top: 64px;
+    bottom: 0;
+    width: 220px;
+    background: #F8FAFC;
+    border-right: 1px solid #E2E8F0;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 0.5rem;
+    z-index: 98;
+    overflow-y: auto;
+}
+
+.sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    background: none;
+    border: none;
+    border-left: 3px solid transparent;
+    border-radius: 6px;
+    margin: 0 0 0.1rem;
+    color: #64748B;
+    font-size: 0.82rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+}
+
+.sidebar-nav-item:hover {
+    color: #475569;
+    background: rgba(99, 102, 241, 0.06);
+    border-left-color: rgba(99, 102, 241, 0.3);
+}
+
+.sidebar-nav-item.active {
+    background: rgba(99, 102, 241, 0.10);
+    color: #6366F1;
+    border-left-color: #6366F1;
+    font-weight: 600;
+}
+
+.sidebar-client-info {
+    margin-top: auto;
+    padding: 0.75rem 0.5rem;
+    border-top: 1px solid #E2E8F0;
+    font-size: var(--fs-xs);
+    color: var(--c-text-light);
+    line-height: 1.6;
+}
+
+/* ============================================
+   MAIN CONTENT — offset sidebar
+   ============================================ */
+.agent-main-content {
+    margin-left: 220px;
+    padding: 1.5rem var(--space-6) 5rem; /* 5rem bottom = room for fixed footer bar */
+}
+
+/* ============================================
+   PANELS — single column centré
+   ============================================ */
+.agent-panel {
+    max-width: 720px;
+    margin: 0 auto 1.5rem;
+}
+
+.agent-panel .audit-column {
+    width: 100%;
+}
+
+/* ============================================
+   TYPOGRAPHY — alignement dashboard-v3
+   ============================================ */
+.audit-column h2 {
+    font-size: 1.1rem;
+}
+
+.audit-column h3 {
+    font-size: 0.72rem;
+}
+
+.stat-row {
+    font-size: var(--fs-sm);
+}
+
+.scoring-placeholder p,
+.scoring-placeholder a {
+    font-size: var(--fs-sm);
+}
+
+/* ============================================
+   TOAST — Sprint 151 (identique dashboard-v3)
+   ============================================ */
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-semi);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: toast-in 0.25s ease;
+    min-width: 220px;
+    max-width: 360px;
+}
+
+.toast--success { background: #ECFDF5; color: var(--c-success); border-left: 4px solid var(--c-success); }
+.toast--error   { background: #FEF2F2; color: var(--c-danger);  border-left: 4px solid var(--c-danger);  }
+.toast--warning { background: #FFFBEB; color: var(--c-warning); border-left: 4px solid var(--c-warning); }
+.toast--info    { background: #EFF6FF; color: var(--c-info);    border-left: 4px solid var(--c-info);    }
+
+.toast.removing { animation: toast-out 0.2s ease forwards; }
+
+@keyframes toast-in  { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+@keyframes toast-out { to   { opacity: 0; transform: translateX(20px); } }
+
+/* ============================================
+   MSG SLOT — feedback inline par panel
+   ============================================ */
+.msg-slot {
+    display: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: var(--fs-sm);
+    margin: 0.5rem 0;
+}
+
+.msg-slot.ok {
+    display: block;
+    background: #ECFDF5;
+    color: var(--c-success);
+    border-left: 3px solid var(--c-success);
+}
+
+.msg-slot.er {
+    display: block;
+    background: #FEF2F2;
+    color: var(--c-danger);
+    border-left: 3px solid var(--c-danger);
+}
+
+/* ============================================
+   RESPONSIVE — mobile: sidebar masquée
+   ============================================ */
+@media (max-width: 768px) {
+    .agent-sidebar { display: none; }
+    .agent-main-content { margin-left: 0; }
+    .agent-footer { left: 0; }
+    .footer-inner { flex-direction: column; gap: 8px; text-align: center; }
 }
