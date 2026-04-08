@@ -1,5 +1,15 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch22] — 2026-04-08
+
+### Changed
+- Beta operational limits raised for real PME environments:
+  max_files 100K → 500K (NAS 200-300K files),
+  PII scan max_size 10MB → 50MB (ERP CSV exports),
+  file read buffer 64KB → 256KB (PII detection in large headers),
+  OneDrive max_file_size 100MB → 500MB (SharePoint archives),
+  DB scan timeout 30s → 60s (VPN latency).
+
 ## [1.7.R-patch21] — 2026-04-04
 
 ### Changed

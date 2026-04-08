@@ -6,7 +6,7 @@ onedrive:
   default_max_files: 10000000
 
   # Maximum file size to include (MB)
-  max_file_size_mb: 100
+  max_file_size_mb: 500
 
   # Scannable extensions (files that can be processed for PII)
   scannable_extensions:

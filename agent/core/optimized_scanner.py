@@ -56,10 +56,10 @@ except ImportError:
 # ============================================================================
 
 def read_single_file(filepath: str) -> tuple:
-    """Read first 64KB of file for PII scanning"""
+    """Read first 256KB of file for PII scanning"""
     try:
         with open(filepath, 'rb') as f:
-            return (filepath, f.read(65536))
+            return (filepath, f.read(262144))  # 256KB
     except Exception as e:
         logger.debug(f"Cannot read {filepath}: {e}")
         return (filepath, None)

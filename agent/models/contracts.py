@@ -61,7 +61,7 @@ class FileMetadata:
 @dataclass
 class CollectorConfig:
     """Configuration for file collection."""
-    max_files: int = 100_000
+    max_files: int = 500_000
     max_depth: int = 15
     skip_hidden: bool = True
     skip_dirs: Set[str] = field(default_factory=lambda: {

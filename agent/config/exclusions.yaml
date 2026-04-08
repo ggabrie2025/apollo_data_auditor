@@ -241,7 +241,7 @@ pii_scanner:
     - .xls
 
   # Max file size to scan (MB)
-  max_scan_size_mb: 10
+  max_scan_size_mb: 50
 
 # -----------------------------------------------------------------------------
 # FINGERPRINT CONFIGURATION (V1.5 - Dynamic)

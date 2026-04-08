@@ -46,7 +46,7 @@ class DBScanConfig:
     username: str
     password: str
     ssl: bool = False
-    timeout: int = 30
+    timeout: int = 60
 
     # Hub API (for cloud snapshot)
     hub_url: Optional[str] = None
