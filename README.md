@@ -1,15 +1,32 @@
-# APOLLO™ Data Auditor
-
-**Every file is a potential risk. Measure it.**
+# APOLLO™ Data Auditor — Every file is a risk. Measure it.
 
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Beta](https://img.shields.io/badge/Status-Beta-orange.svg)]()
 [![Website](https://img.shields.io/badge/Website-apollo.aiia--tech.com-blue.svg)](https://apollo.aiia-tech.com)
 
-APOLLO Data Auditor scans your files, databases, and cloud. You get your financial exposure in euros and dollars — not an abstract score.
+APOLLO™ Data Auditor is a local-first data risk audit tool for SMBs and mid-market companies. It scans files, databases, and cloud storage — and returns your financial exposure in € and $ under GDPR and CCPA. Not an abstract score. A number your CFO and your DPO can act on.
+
+**What it does:**
+- Scans 11 sources: PostgreSQL, MySQL, MongoDB, SQL Server, OneDrive, SharePoint, Active Directory/LDAP, Pennylane (ERP), local files, NFS/SMB shares
+- Detects 44 PII types automatically
+- Produces 129 scores across 4 modules: Risk Exposure, Compliance, Data Protection, Intelligence (AI Readiness)
+- Identifies toxic PII combinations, simulates breach scenarios, evaluates cyber insurance readiness
+- Up to 1.16M rows/sec with our native Rust agent
+
+**Zero data exfiltration** — your data never leaves your infrastructure. Only metadata and counters transit to the cloud hub.
+
+**4 modules, 4 audiences:**
+- **Risk Exposure** — for DPOs, executives, CFOs
+- **Compliance** — for DPOs, auditors, CISOs (GDPR, CCPA, NIS2, SOC2, DORA)
+- **Data Protection** — for infra leads, backup admins (breach simulation, ransomware scenarios)
+- **Intelligence** — for CDOs, CTOs (AI Readiness, data quality, AI Act pre-compliance)
+
+Deployed in minutes. Not weeks. No consultant needed. Pricing starts at €0 (free tier) up to €4,999/year.
 
 ![APOLLO Demo](assets/teaser_readme.gif)
+
+**[Watch the demo on YouTube →](https://youtu.be/gwu6BGKkbag)**
 
 ---
 
