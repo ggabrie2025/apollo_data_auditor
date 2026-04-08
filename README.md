@@ -26,7 +26,7 @@ Deployed in minutes. Not weeks. No consultant needed. Pricing starts at €0 (fr
 
 ![APOLLO Demo](assets/teaser_readme.gif)
 
-**[Watch the demo on YouTube →](https://youtu.be/gwu6BGKkbag)**
+**[Watch the demo on YouTube →](https://youtu.be/YJhy3N_9_1M)**
 
 ---
 
