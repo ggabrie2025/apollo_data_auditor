@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How It Works | APOLLO™ Data Auditor Docs</title>
+  <meta name="description" content="How APOLLO™ Data Auditor works: local agent scans your infrastructure, only metadata transits to the cloud. Zero PII exfiltration by architecture.">
+  <meta name="keywords"    content="APOLLO architecture, zero data exfiltration, local PII scanner, GDPR compliance architecture, TLS 1.3">
+  <meta name="author"      content="aiia-tech.com">
+  <meta name="robots"      content="index, follow">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://ggabrie2025.github.io/apollo_data_auditor/docs/how-it-works.html">
+  <meta property="og:title"       content="How It Works | APOLLO™ Data Auditor">
+  <meta property="og:description" content="Local agent scans your infrastructure. Only counters and metadata transit to the cloud. Raw data never leaves your perimeter.">
+  <meta property="og:image"       content="https://ggabrie2025.github.io/apollo_data_auditor/docs/assets/teaser_readme.gif">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="How It Works | APOLLO™ Data Auditor">
+  <meta name="twitter:description" content="Zero data exfiltration by architecture. Local agent, cloud scoring.">
+  <link rel="canonical" href="https://ggabrie2025.github.io/apollo_data_auditor/docs/how-it-works.html">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-name">APOLLO™ Docs</div>
+      <div class="logo-tagline">Data Auditor v1.7.R</div>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">Introduction</a>
+    <a href="how-it-works.html" class="active">How It Works</a>
+    <a href="quick-start.html">Quick Start</a>
+    <a href="connectors.html">Connectors</a>
+    <a href="modules.html">Modules</a>
+    <a href="security.html">Security</a>
+    <a href="faq.html">FAQ</a>
+    <a href="changelog.html">Changelog</a>
+    <details>
+      <summary>Legal <span class="chevron">&#9654;</span></summary>
+      <div class="legal-links">
+        <a href="legal/license.html">License (BSL 1.1)</a>
+        <a href="legal/data-privacy.html">Data Privacy</a>
+        <a href="legal/security-policy.html">Security Policy</a>
+        <a href="legal/third-party.html">Third-Party Licenses</a>
+        <a href="legal/cla.html">CLA</a>
+        <a href="legal/notice.html">Notice</a>
+      </div>
+    </details>
+  </div>
+  <div class="sidebar-footer">
+    &copy; 2025-2026 aiia-tech.com<br>
+    APOLLO&#8482; is a registered trademark.
+  </div>
+</nav>
+
+<main class="content">
+
+  <div class="page-header">
+    <span class="page-label">Architecture</span>
+    <h1>How It Works</h1>
+    <p>Local scanning. Cloud scoring. Zero data exfiltration &mdash; by design, not by promise.</p>
+  </div>
+
+  <!-- ── SECTION 1: THE FULL FLOW ──────────────────────── -->
+  <h2>The Complete Flow</h2>
+
+  <div class="arch-flow">
+
+    <!-- YOUR INFRASTRUCTURE BOX -->
+    <div class="arch-box infra-box">
+      <div class="arch-box-header">Your Infrastructure — data stays here</div>
+
+      <div class="sources-row">
+        <div class="source-chip">Files</div>
+        <div class="source-chip">Databases</div>
+        <div class="source-chip">Cloud</div>
+        <div class="source-chip">Directory</div>
+        <div class="source-chip">ERP</div>
+        <div class="source-chip">Infra</div>
+      </div>
+
+      <div class="agent-block">
+        <div class="agent-block-title">APOLLO Agent (on-premise)</div>
+        <p>Scans locally. Detects PII. Extracts metadata only.</p>
+        <p>Read-only. No INSERT, UPDATE, DELETE. No file copy.</p>
+        <div class="never-exits">
+          Raw data NEVER leaves this perimeter &mdash; files, rows, emails, IBANs stay here.
+        </div>
+      </div>
+    </div>
+
+    <!-- ARROW -->
+    <div class="arch-arrow">
+      <div class="arrow-tls">TLS 1.3 &mdash; encrypted in transit</div>
+      <div class="arrow-down">&#8595;</div>
+      <div class="arrow-label">Counters &amp; metadata only &mdash; no names, no emails, no file contents</div>
+      <div class="arrow-down">&#8595;</div>
+    </div>
+
+    <!-- CLOUD HUB BOX -->
+    <div class="arch-box cloud-box">
+      <div class="arch-box-header">APOLLO Cloud Hub (EU)</div>
+      <div class="cloud-services">
+        <div class="cloud-chip">
+          <strong>Scoring Engine</strong>
+          <span>129 risk scores across 4 modules</span>
+        </div>
+        <div class="cloud-chip">
+          <strong>Breach Simulation</strong>
+          <span>Financial exposure in &euro; and $</span>
+        </div>
+        <div class="cloud-chip">
+          <strong>Compliance Dashboard</strong>
+          <span>GDPR, CCPA, NIS2, AI Act</span>
+        </div>
+        <div class="cloud-chip">
+          <strong>PDF Reports</strong>
+          <span>Executive, Risk, Compliance, Protection, Intelligence</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.arch-flow -->
+
+  <!-- ── SECTION 2: WHAT TRANSITS ──────────────────────── -->
+  <h2>What Stays vs What Transits</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Stays on your infrastructure</th>
+        <th>&#8594; Transits to the cloud</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>File contents</td>
+        <td>File count per type</td>
+      </tr>
+      <tr>
+        <td>Database rows</td>
+        <td>Table/column names + PII flags</td>
+      </tr>
+      <tr>
+        <td>Emails, names, IBANs</td>
+        <td>PII category counters (e.g. "156 IBAN detected")</td>
+      </tr>
+      <tr>
+        <td>Documents, spreadsheets</td>
+        <td>Metadata (size, date, permissions)</td>
+      </tr>
+      <tr>
+        <td>Passwords, tokens, credentials</td>
+        <td>Encryption status (yes/no)</td>
+      </tr>
+      <tr>
+        <td>AD users, LDAP entries</td>
+        <td>User counts, dormant accounts ratio, admin ratio</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-success">
+    <div class="callout-content">
+      <strong>Zero data persistence in the cloud.</strong>
+      No metadata is retained after report generation. Nothing is stored, sold, or shared.
+    </div>
+  </div>
+
+  <!-- ── SECTION 3: SCAN → SCORE → ACT ─────────────────── -->
+  <h2>Scan &rarr; Score &rarr; Act</h2>
+
+  <div class="steps-row">
+    <div class="step-card">
+      <div class="step-num">&#9312;</div>
+      <div class="step-title">Scan</div>
+      <div class="step-body">
+        Agent scans 11 source types locally. Files, DBs, Cloud, Directory, ERP, Infrastructure.
+        Completes in &lt;48 hours for most environments.
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">&#9313;</div>
+      <div class="step-title">Score</div>
+      <div class="step-body">
+        Cloud hub computes 129 risk scores across 4 modules in seconds.
+        All from anonymized counters — zero raw data involved.
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">&#9314;</div>
+      <div class="step-title">Act</div>
+      <div class="step-body">
+        Dashboard shows &euro; exposure, prioritized remediation plan (P1/P2/P3),
+        breach simulation, and compliance gaps with deadlines.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 4: ARCHITECTURE DETAIL ────────────────── -->
+  <h2>Architecture Detail</h2>
+  <pre>
+Agent (on-premise, pure collector)  →  Apollo Cloud Hub  →  Risk scores · Compliance dashboard
+
+Client (Linux/Windows)                          Cloud (Railway/EU)
+┌──────────────────────────┐                    ┌──────────────────────────┐
+│  AGENT v1.7.R            │   POST /api/v1/   │  CLOUD V3                │
+│  Autonomous, scan only   │   hub/ingest      │  100% scoring server     │
+│  scores=None             │ ─────────────────>│  Dashboard (display)     │
+│  X-API-KEY per client    │   JSON metadata   │  PostgreSQL              │
+│  Rust I/O native module  │                   │                          │
+└──────────────────────────┘                   └──────────────────────────┘</pre>
+
+  <h3>Agent — What It Is</h3>
+  <ul>
+    <li><strong>Pure collector</strong> &mdash; scans only, never computes scores locally</li>
+    <li><strong>Autonomous binary</strong> &mdash; packaged with PyInstaller, no dependencies required on client machine</li>
+    <li><strong>Unique X-API-KEY per client</strong> &mdash; isolates each customer's data</li>
+    <li><strong>Rust native I/O module</strong> &mdash; up to 1.16M rows/sec scan rate</li>
+    <li><strong>Read-only</strong> &mdash; no write operations on any data source</li>
+  </ul>
+
+  <h3>Cloud Hub — What It Does</h3>
+  <ul>
+    <li>Receives anonymized metadata via <code>POST /api/v1/hub/ingest</code></li>
+    <li>Computes 129 scores across 4 modules (Risk, Compliance, Protection, Intelligence)</li>
+    <li>Generates prioritized action plan with financial impact (&euro;/$)</li>
+    <li>Serves dashboard &mdash; display only, no raw data stored</li>
+  </ul>
+
+  <div style="margin-top:40px">
+    <a href="quick-start.html" class="cta-button">Get Started &rarr;</a>
+    &nbsp;&nbsp;
+    <a href="security.html" style="font-size:14px; color:var(--text-secondary)">Read Security details &rarr;</a>
+  </div>
+
+</main>
+</body>
+</html>

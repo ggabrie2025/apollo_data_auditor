@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connectors | APOLLO™ Data Auditor Docs</title>
+  <meta name="description" content="APOLLO™ Data Auditor supports 11 source connectors: PostgreSQL, MySQL, MongoDB, SQL Server, OneDrive, SharePoint, LDAP/AD, Pennylane, local files, NFS/SMB, and infrastructure.">
+  <meta name="keywords"    content="APOLLO connectors, PostgreSQL scanner, MySQL PII, MongoDB audit, OneDrive GDPR, LDAP compliance, Pennylane ERP">
+  <meta name="author"      content="aiia-tech.com">
+  <meta name="robots"      content="index, follow">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://ggabrie2025.github.io/apollo_data_auditor/docs/connectors.html">
+  <meta property="og:title"       content="Connectors | APOLLO™ Data Auditor">
+  <meta property="og:description" content="11 source connectors: databases, cloud, directory, ERP, infrastructure. All with 44 PII types detected.">
+  <meta property="og:image"       content="https://ggabrie2025.github.io/apollo_data_auditor/docs/assets/teaser_readme.gif">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Connectors | APOLLO™ Data Auditor">
+  <meta name="twitter:description" content="11 source connectors covering files, databases, cloud, directory, ERP and infrastructure.">
+  <link rel="canonical" href="https://ggabrie2025.github.io/apollo_data_auditor/docs/connectors.html">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-name">APOLLO™ Docs</div>
+      <div class="logo-tagline">Data Auditor v1.7.R</div>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">Introduction</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="quick-start.html">Quick Start</a>
+    <a href="connectors.html" class="active">Connectors</a>
+    <a href="modules.html">Modules</a>
+    <a href="security.html">Security</a>
+    <a href="faq.html">FAQ</a>
+    <a href="changelog.html">Changelog</a>
+    <details>
+      <summary>Legal <span class="chevron">&#9654;</span></summary>
+      <div class="legal-links">
+        <a href="legal/license.html">License (BSL 1.1)</a>
+        <a href="legal/data-privacy.html">Data Privacy</a>
+        <a href="legal/security-policy.html">Security Policy</a>
+        <a href="legal/third-party.html">Third-Party Licenses</a>
+        <a href="legal/cla.html">CLA</a>
+        <a href="legal/notice.html">Notice</a>
+      </div>
+    </details>
+  </div>
+  <div class="sidebar-footer">
+    &copy; 2025-2026 aiia-tech.com<br>
+    APOLLO&#8482; is a registered trademark.
+  </div>
+</nav>
+
+<main class="content">
+
+  <div class="page-header">
+    <span class="page-label">Sources</span>
+    <h1>Connectors</h1>
+    <p>11 source types. 44 PII types detected automatically across all of them.</p>
+  </div>
+
+  <div class="callout callout-success">
+    <div class="callout-content">
+      <strong>All connectors are read-only.</strong> APOLLO never writes, modifies, or deletes data.
+      Only SELECT queries and schema inspection are issued.
+    </div>
+  </div>
+
+  <!-- FILES -->
+  <h2>Files</h2>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">Local Files</div>
+      <div class="card-subtitle">Windows &middot; Linux &middot; macOS</div>
+      <div class="card-desc">Scans any local filesystem. Detects PII in CSV, XLSX, PDF, DOCX, TXT, JSON, XML and more. NTFS junction loop detection on Windows.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+    <div class="card">
+      <div class="card-title">NFS / SMB Shares</div>
+      <div class="card-subtitle">Network shares</div>
+      <div class="card-desc">Scans mounted NFS and SMB/CIFS network shares. Treats them as local paths &mdash; no special protocol required.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+  </div>
+
+  <!-- DATABASES -->
+  <h2>Databases</h2>
+  <div class="card-grid">
+    <div class="card">
+
+      <div class="card-title">PostgreSQL</div>
+      <div class="card-subtitle">Port auto-discovery &middot; asyncpg</div>
+      <div class="card-desc">Scans all schemas and tables. Samples rows for PII detection. Detects column names + content. Auto-discovers ports 5432, 5433.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+    <div class="card">
+
+      <div class="card-title">MySQL</div>
+      <div class="card-subtitle">Port auto-discovery &middot; aiomysql</div>
+      <div class="card-desc">Scans all databases and tables. Read-only via SELECT. Auto-discovers ports 3306, 3307. MIT license connector (no GPL).</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+    <div class="card">
+
+      <div class="card-title">MongoDB</div>
+      <div class="card-subtitle">motor async &middot; collections</div>
+      <div class="card-desc">Scans collections with smart sampling (up to 100K docs). Completeness scoring via aggregation pipeline. Auto-discovers port 27017.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+    <div class="card">
+
+      <div class="card-title">SQL Server</div>
+      <div class="card-subtitle">aioodbc &middot; MSSQL</div>
+      <div class="card-desc">Scans SQL Server databases. Schema inspection via <code>information_schema</code>. Auto-discovers port 1433.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+  </div>
+
+  <!-- CLOUD -->
+  <h2>Cloud</h2>
+  <div class="card-grid">
+    <div class="card">
+
+      <div class="card-title">OneDrive</div>
+      <div class="card-subtitle">Microsoft Graph API &middot; read-only scopes</div>
+      <div class="card-desc">Scans OneDrive personal and business. Files up to 500MB (SharePoint archives). Detects external shares and PII in documents.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+    <div class="card">
+
+      <div class="card-title">SharePoint</div>
+      <div class="card-subtitle">Microsoft Graph API &middot; sites</div>
+      <div class="card-desc">Scans SharePoint sites and document libraries. Detects external sharing, PII, and document metadata.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+  </div>
+
+  <!-- DIRECTORY -->
+  <h2>Directory</h2>
+  <div class="card-grid">
+    <div class="card">
+
+      <div class="card-title">Active Directory</div>
+      <div class="card-subtitle">Windows Server AD &middot; LDAP</div>
+      <div class="card-desc">Scans AD users, groups, and OUs. Detects dormant accounts (90-day threshold), weak passwords, admin ratio, and PII in user attributes.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+    <div class="card">
+
+      <div class="card-title">LDAP (OpenLDAP)</div>
+      <div class="card-subtitle">ldap3 &middot; SIMPLE bind</div>
+      <div class="card-desc">Scans OpenLDAP directories. Users, groups, OUs. Configurable base DN, bind credentials, SSL/TLS support.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+  </div>
+
+  <!-- ERP -->
+  <h2>ERP / App</h2>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">Pennylane</div>
+      <div class="card-subtitle">ERP &middot; API v2 &middot; 25 req/5s</div>
+      <div class="card-desc">Scans Pennylane ERP: customers, suppliers, invoices. Detects PII in ERP records (SIREN, SIRET, IBAN, email). Cursor-based pagination.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+  </div>
+
+  <!-- INFRASTRUCTURE -->
+  <h2>Infrastructure</h2>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">Infrastructure Scan</div>
+      <div class="card-subtitle">Hardware &middot; OS &middot; Backup &middot; SMART</div>
+      <div class="card-desc">Collects OS info, RAM, disk usage, SMART status, backup configuration, encryption status. Runs automatically at agent startup. No credentials required.</div>
+      <span class="card-status">&#10003; GA</span>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>44 PII Types Detected</h2>
+  <p>APOLLO detects 44 PII types across all connectors:</p>
+
+  <table>
+    <thead>
+      <tr><th>Category</th><th>Types</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Contact</strong></td>
+        <td>Email, phone (FR/US/EU), mobile</td>
+      </tr>
+      <tr>
+        <td><strong>Financial</strong></td>
+        <td>IBAN, IBAN-FR, IBAN SEPA (all EU), credit card, BIC/SWIFT</td>
+      </tr>
+      <tr>
+        <td><strong>Identity &mdash; France</strong></td>
+        <td>SSN (NIR), passport, driver license, SIREN, SIRET</td>
+      </tr>
+      <tr>
+        <td><strong>Identity &mdash; EU</strong></td>
+        <td>DNI/NIE/NIF (ES), PESEL (PL), BSN (NL, with elfproef), NISS (BE, with mod97), Codice Fiscale (IT), NHS (UK)</td>
+      </tr>
+      <tr>
+        <td><strong>Identity &mdash; US</strong></td>
+        <td>SSN, ITIN, EIN, passport</td>
+      </tr>
+      <tr>
+        <td><strong>Health</strong></td>
+        <td>ICD-10 codes, health insurance numbers</td>
+      </tr>
+      <tr>
+        <td><strong>Digital</strong></td>
+        <td>IPv4, IPv6, MAC address, cookie IDs</td>
+      </tr>
+      <tr>
+        <td><strong>Location</strong></td>
+        <td>French postal code, GPS coordinates</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:40px">
+    <a href="modules.html" class="cta-button">View Dashboard Modules &rarr;</a>
+  </div>
+
+</main>
+</body>
+</html>

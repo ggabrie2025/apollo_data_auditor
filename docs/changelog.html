@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Changelog | APOLLO™ Data Auditor Docs</title>
+  <meta name="description" content="APOLLO™ Data Auditor release history. All versions, fixes, features, and changes from v1.7.R to the latest patch.">
+  <meta name="keywords"    content="APOLLO changelog, release notes, version history, data auditor updates">
+  <meta name="author"      content="aiia-tech.com">
+  <meta name="robots"      content="index, follow">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://ggabrie2025.github.io/apollo_data_auditor/docs/changelog.html">
+  <meta property="og:title"       content="Changelog | APOLLO™ Data Auditor">
+  <meta property="og:description" content="Full release history for APOLLO Data Auditor from v1.7.R to latest.">
+  <meta property="og:image"       content="https://ggabrie2025.github.io/apollo_data_auditor/docs/assets/teaser_readme.gif">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Changelog | APOLLO™ Data Auditor">
+  <meta name="twitter:description" content="Full release history for APOLLO Data Auditor.">
+  <link rel="canonical" href="https://ggabrie2025.github.io/apollo_data_auditor/docs/changelog.html">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-name">APOLLO™ Docs</div>
+      <div class="logo-tagline">Data Auditor v1.7.R</div>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">Introduction</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="quick-start.html">Quick Start</a>
+    <a href="connectors.html">Connectors</a>
+    <a href="modules.html">Modules</a>
+    <a href="security.html">Security</a>
+    <a href="faq.html">FAQ</a>
+    <a href="changelog.html" class="active">Changelog</a>
+    <details>
+      <summary>Legal <span class="chevron">&#9654;</span></summary>
+      <div class="legal-links">
+        <a href="legal/license.html">License (BSL 1.1)</a>
+        <a href="legal/data-privacy.html">Data Privacy</a>
+        <a href="legal/security-policy.html">Security Policy</a>
+        <a href="legal/third-party.html">Third-Party Licenses</a>
+        <a href="legal/cla.html">CLA</a>
+        <a href="legal/notice.html">Notice</a>
+      </div>
+    </details>
+  </div>
+  <div class="sidebar-footer">
+    &copy; 2025-2026 aiia-tech.com<br>
+    APOLLO&#8482; is a registered trademark.
+  </div>
+</nav>
+
+<main class="content">
+
+  <div class="page-header">
+    <span class="page-label">Releases</span>
+    <h1>Changelog</h1>
+    <p>All notable changes to APOLLO™ Data Auditor.</p>
+  </div>
+
+  <!-- v1.7.R-patch22 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch22</span>
+      <span class="version-date">2026-04-08</span>
+    </div>
+    <span class="change-type changed">Changed</span>
+    <ul>
+      <li>Beta operational limits raised for real PME environments: <code>max_files</code> 100K &rarr; 500K (NAS 200&ndash;300K files), PII scan <code>max_size</code> 10MB &rarr; 50MB (ERP CSV exports), file read buffer 64KB &rarr; 256KB (PII detection in large headers), OneDrive <code>max_file_size</code> 100MB &rarr; 500MB (SharePoint archives), DB scan timeout 30s &rarr; 60s (VPN latency)</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch21 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch21</span>
+      <span class="version-date">2026-04-04</span>
+    </div>
+    <span class="change-type changed">Changed</span>
+    <ul>
+      <li>Sprint 151: Agent UI Redesign &mdash; sidebar navigation, toast notifications, message slots system. Improved layout consistency across scan views.</li>
+      <li>hub-link-section fixed bottom: Stop Scan + Reset Dashboard buttons always visible regardless of scroll position.</li>
+      <li>Footer unified: single fixed bar with stop/reset buttons + copyright.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch20 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch20</span>
+      <span class="version-date">2026-03-26</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>KI-119: <code>ram_total_bytes=0</code> instead of null when psutil absent &mdash; init <code>ram_total</code>/<code>ram_available</code> to None (was 0). ImportError now emits JSON null for D180/D181. Same fix for disk OSError fallback D184/D185.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch19 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch19</span>
+      <span class="version-date">2026-03-26</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>KI-118: MongoDB <code>completeness_score=0.0</code>, <code>zone=null</code>, <code>sample_rate=null</code> &mdash; wire <code>_compute_quality_metrics</code> + <code>smart_sampler</code> into MongoDB branch of <code>_extract_schema</code>. New <code>elif mongodb</code> in <code>_compute_quality_metrics</code>: motor aggregate pipeline <code>$group/$sum/$cond/$ifNull</code> to compute null_pcts per field (guard &le; 100K docs). MongoDB collections now report real completeness_score, zone, sample_rate.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch18 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch18</span>
+      <span class="version-date">2026-03-26</span>
+    </div>
+    <span class="change-type changed">Changed</span>
+    <ul>
+      <li>Beta period: all connectors unlocked for all tiers (Sprint 115 L2). DB and Cloud scan buttons no longer locked for free tier during beta.</li>
+    </ul>
+    <span class="change-type docs">Docs</span>
+    <ul>
+      <li>VM_BUILD_PROCEDURE.md: add patch13 validation results (9 Windows + 8 Linux connectors, 102 PASS / 0 FAIL E2E on 2026-03-20).</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch17 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch17</span>
+      <span class="version-date">2026-03-26</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>F5: add <code>logger.warning</code> to all 6 except blocks in <code>get_governance_metrics()</code>. Silent exception swallowing replaced with named exception + warning log. Pattern: <code>[governance/&lt;metric&gt;] &lt;command&gt; failed: &lt;error&gt;</code></li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch16 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch16</span>
+      <span class="version-date">2026-03-26</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>KI-130: <code>governance_metrics=null</code> for MongoDB &mdash; implement <code>get_governance_metrics()</code> in MongoDBConnector. 6 MongoDB-native KPIs: documentation_coverage (JSON Schema validators), security_compliance (usersInfo root roles), access_control (read-only users ratio), change_tracking (replica set hello command), table_size_distribution (1-CV of collStats storageSize), ai_act_article11 (ML collection name heuristic). <code>hasattr()</code> guard at <code>db_scanner.py:296</code> now activates automatically for MongoDB.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch15 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch15</span>
+      <span class="version-date">2026-03-26</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>KI-128: <code>tables_scanned=0</code> &mdash; add default assignment before differential branch. Full scan mode now sets <code>tables_scanned=len(tables)</code> before the differential override block.</li>
+      <li>KI-129: <code>total_size_bytes=null</code> &mdash; aggregate sum(size_bytes) from scanned tables. <code>size_values</code> list comprehension skips None entries; result is None only if all tables have no size_bytes data.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch13 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch13</span>
+      <span class="version-date">2026-03-20</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>KI-103: <code>db_scanner._detect_pii()</code> double-counting &mdash; add <code>break</code> after first valid PII match per cell value. Prevents French IBAN from generating 'iban' + 'iban_fr', and ITIN from generating 'ssn_us' + 'itin_us'. One type per cell value.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch12 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch12</span>
+      <span class="version-date">2026-03-20</span>
+    </div>
+    <span class="change-type added">Added</span>
+    <ul>
+      <li>KI-101: <code>estimated_data_subjects</code> &mdash; distinct identifier count (CNIL Art.33 / D195). Track unique identifier values (email, phone_fr, ssn_fr, ssn_us) per file in pii_scanner + optimized_scanner. Aggregate across all files. Add to JSON summary. Fallback = files_with_pii when no identifiers found.</li>
+    </ul>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>KI-097: normalize seen_values (strip spaces + uppercase) before dedup comparison &mdash; prevents iban/iban_fr double-counting when values differ only by spacing.</li>
+      <li>Parallel path metadata bug: missing 'type' key in PII entries caused crash.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch11 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch11</span>
+      <span class="version-date">2026-03-19</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>PII scan (KI-080/L-006): apply elfproef (BSN NL) and mod97 (NISS BE) validators in all 3 scan paths. PATH B (optimized_scanner, default prod) and PATH C (db_scanner) had no validator &mdash; every 9-digit number was counted as Dutch BSN.</li>
+    </ul>
+    <span class="change-type changed">Refactored</span>
+    <ul>
+      <li>PII scan (KI-080/L-011): consolidate 3 independent PII pattern dicts into single source + derivation. DICT-C (340 lines, dead code) deleted. 6 EU patterns (DNI/NIE/NIF/PESEL/CF/IBAN-SEPA) reactivated in PATH B. Net: -420 lines.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch10 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch10</span>
+      <span class="version-date">2026-03-18</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>LDAP connector: warn when bind_dn uses DN format (CN=/DC=) instead of UPN. Windows Server 2022 AD rejects SIMPLE bind with DN format (KB4520011). Warning logged with truncated bind_dn and explicit hint to use UPN (<code>user@domain.local</code>).</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch9 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch9</span>
+      <span class="version-date">2026-03-18</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>Infra scan: add <code>--mode infra</code> to argparse choices + dispatch in main.py</li>
+      <li>Infra scan: add <code>agent.main_infra</code> to mode_map in <code>_build_scan_cmd</code> (server.py)</li>
+      <li>Infra scan: <code>_silent_infra_scan</code> now writes <code>apollo_infra_{key_prefix}_{ts}.json</code> to tempdir before Hub send &mdash; payload survives quota errors / network failures.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch8 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch8</span>
+      <span class="version-date">2026-03-18</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>Windows: detect NTFS junction point loops in <code>_walk_directory</code>. <code>os.walk(followlinks=False)</code> does not detect junction points as symlinks &mdash; AppData\Local junctions looped back creating 21 phantom files per real file. Fix: track resolved canonical paths via <code>seen_real_paths</code> set.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch5 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch5</span>
+      <span class="version-date">2026-03-18</span>
+    </div>
+    <span class="change-type changed">Changed</span>
+    <ul>
+      <li>Exclusions: browser AppData paths excluded by default (Edge, Chrome, Firefox, Brave). Prevents false PII positives from minified JS files in Windows AppData.</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch4 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch4</span>
+      <span class="version-date">2026-03-17</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>LDAP/AD connector: fallback NTLM &rarr; SIMPLE bind for Active Directory Windows (KB4520011)</li>
+      <li>ldap3 + pyasn1 added to requirements.txt and PyInstaller hidden-imports</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R-patch1 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch1</span>
+      <span class="version-date">2026-03-15</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>Force UTF-8 encoding on Windows stdout/stderr &mdash; prevents CP1252 crash on Unicode characters (arrows, accented paths)</li>
+    </ul>
+    <span class="change-type changed">Changed</span>
+    <ul>
+      <li>Purged all Nuitka references from build docs &mdash; PyInstaller is the only authorized build tool</li>
+      <li>Build docs now clarify: macOS = local PyInstaller, Windows/Linux = GitHub Actions</li>
+      <li>Added 8-step pre-push checklist in GITHUB_ACTIONS_BUILD.md</li>
+    </ul>
+  </div>
+
+  <!-- v1.7.R -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R</span>
+      <span class="version-date">2026-03-10</span>
+    </div>
+    <span class="change-type added">Added</span>
+    <ul>
+      <li>Installers for macOS (<code>install_macos.sh</code>) and Windows (<code>install_windows.ps1</code>)</li>
+      <li>SHA256 integrity verification on all installers (abort on mismatch)</li>
+      <li>Distribution exclusively via aiia-tech.com/download</li>
+      <li>BSL 1.1 v2 license with NOTICE, CLA, third-party licenses</li>
+      <li>Beta tester guide (APOLLO_Beta_Guide_2026.docx)</li>
+    </ul>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>Frozen binary subprocess routing via <code>--mode</code> flag (PyInstaller)</li>
+      <li>Complete frozen binary fix for FILES + OneDrive + asyncpg connectors</li>
+      <li>Infrastructure scan now runs automatically at login (was only triggered after FILES scan)</li>
+    </ul>
+    <span class="change-type changed">Changed</span>
+    <ul>
+      <li>macOS installer: native arm64 (Apple Silicon) &mdash; removed Rosetta 2 requirement</li>
+      <li><code>DOWNLOAD_BASE</code> configurable via env var for testing</li>
+    </ul>
+  </div>
+
+  <hr>
+
+  <h2>Versioning &amp; BSL Change Dates</h2>
+  <table>
+    <thead>
+      <tr><th>Version</th><th>Release Date</th><th>BSL Change Date</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>1.7.R</code></td>
+        <td>2026-03-08</td>
+        <td>2030-01-01 (fixed) &mdash; earliest of fixed date or +4 years</td>
+      </tr>
+      <tr>
+        <td><code>0.1.0</code></td>
+        <td>2025-06-01</td>
+        <td>2029-06-01 (4 years from release)</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="text-muted">Per BSL 1.1: each version converts to Apache 2.0 on whichever date comes first &mdash; the fixed Change Date (2030-01-01) or 4 years after that version&rsquo;s first public release.</p>
+
+</main>
+</body>
+</html>

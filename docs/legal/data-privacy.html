@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Privacy | APOLLO™ Data Auditor Docs</title>
+  <meta name="description" content="APOLLO™ Data Auditor Data Privacy Statement. Zero PII exfiltration. Read-only connectors. TLS 1.3. Zero cloud persistence.">
+  <meta name="author"      content="aiia-tech.com">
+  <meta name="robots"      content="index, follow">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://ggabrie2025.github.io/apollo_data_auditor/docs/legal/data-privacy.html">
+  <meta property="og:title"       content="Data Privacy | APOLLO™ Data Auditor">
+  <meta property="og:description" content="Data Privacy Statement: zero PII exfiltration, read-only, TLS 1.3, zero cloud persistence.">
+  <link rel="canonical" href="https://ggabrie2025.github.io/apollo_data_auditor/docs/legal/data-privacy.html">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="../index.html">
+      <div class="logo-name">APOLLO™ Docs</div>
+      <div class="logo-tagline">Data Auditor v1.7.R</div>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="../index.html">Introduction</a>
+    <a href="../how-it-works.html">How It Works</a>
+    <a href="../quick-start.html">Quick Start</a>
+    <a href="../connectors.html">Connectors</a>
+    <a href="../modules.html">Modules</a>
+    <a href="../security.html">Security</a>
+    <a href="../faq.html">FAQ</a>
+    <a href="../changelog.html">Changelog</a>
+    <details open>
+      <summary>Legal <span class="chevron">&#9654;</span></summary>
+      <div class="legal-links">
+        <a href="license.html">License (BSL 1.1)</a>
+        <a href="data-privacy.html" class="active">Data Privacy</a>
+        <a href="security-policy.html">Security Policy</a>
+        <a href="third-party.html">Third-Party Licenses</a>
+        <a href="cla.html">CLA</a>
+        <a href="notice.html">Notice</a>
+      </div>
+    </details>
+  </div>
+  <div class="sidebar-footer">
+    &copy; 2025-2026 aiia-tech.com<br>
+    APOLLO&#8482; is a registered trademark.
+  </div>
+</nav>
+
+<main class="content">
+  <div class="page-header">
+    <span class="page-label">Legal</span>
+    <h1>Data Privacy &amp; Security Statement</h1>
+    <p>APOLLO&#8482; Data Auditor</p>
+  </div>
+
+  <div class="callout callout-success">
+    <div class="callout-content">
+      <strong>TL;DR:</strong> APOLLO scans your data locally. Only counters and metadata transit to the cloud. No PII value ever leaves your infrastructure.
+    </div>
+  </div>
+
+  <div class="legal-body">
+
+    <h2>What APOLLO&#8482; Data Auditor Is</h2>
+    <p>APOLLO&#8482; Data Auditor is a <strong>native compiled Rust binary</strong>, installed on your infrastructure (Windows or Linux). It scans files, databases, and cloud storage to measure your GDPR/CCPA financial exposure &mdash; without ever exfiltrating your data.</p>
+
+    <h2>Core Principles</h2>
+    <table>
+      <thead><tr><th>Principle</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Read-only</td><td>APOLLO does not modify, write, or delete any data</td></tr>
+        <tr><td>Zero data exfiltration</td><td>No PII value ever leaves your infrastructure</td></tr>
+        <tr><td>Local execution</td><td>The binary runs on your machine or your servers</td></tr>
+        <tr><td>Metadata only</td><td>Only counters transit (e.g. "156 IBAN detected")</td></tr>
+        <tr><td>Zero cloud persistence</td><td>No PII data is stored on the cloud side</td></tr>
+      </tbody>
+    </table>
+
+    <h2>What APOLLO Scans &mdash; and How</h2>
+
+    <h3>Local Files &amp; Network Shares</h3>
+    <ul>
+      <li>APOLLO <strong>reads</strong> files to detect PII patterns (44 types).</li>
+      <li>It does not copy, download, or cache any file content outside your local environment.</li>
+      <li>Analysis results are processed in memory.</li>
+    </ul>
+
+    <h3>Databases (MySQL, PostgreSQL, MongoDB, SQL Server)</h3>
+    <ul>
+      <li>APOLLO connects with the credentials <strong>you provide</strong> at runtime.</li>
+      <li>It issues only <strong>SELECT</strong> queries &mdash; no INSERT, UPDATE, DELETE, or DDL.</li>
+      <li>Schema inspection uses read-only system views (<code>information_schema</code>).</li>
+    </ul>
+
+    <h3>Cloud (OneDrive, SharePoint) &amp; Active Directory / LDAP</h3>
+    <ul>
+      <li>APOLLO uses <strong>read-only scopes</strong> for cloud connections.</li>
+      <li>API tokens are used in-session only, never written to disk by the binary.</li>
+    </ul>
+
+    <h2>What Leaves Your Infrastructure</h2>
+    <p><strong>Only aggregated counters and metadata.</strong></p>
+    <p>The binary sends to the APOLLO cloud only:</p>
+    <ul>
+      <li><strong>Counters</strong> (e.g. "156 IBAN detected in MySQL source")</li>
+      <li><strong>Metadata</strong> (PII type, source, volume)</li>
+      <li><strong>Never</strong> the PII values themselves</li>
+    </ul>
+    <p>These metadata are used server-side to compute financial exposure scores (GDPR/CCPA), risk matrices, and the action plan. <strong>Zero data persistence on the cloud side</strong>: no metadata is retained after report generation.</p>
+    <p>All communications between the binary and the Cloud Hub are encrypted via <strong>TLS 1.3</strong>.</p>
+
+    <h2>Security Architecture</h2>
+    <pre>Your infrastructure                    APOLLO Cloud
+─────────────────────────────────────   ──────────────────────────
+Rust binary (pure collector)       →    Counters + metadata
+  ├── Local file scan                   (never PII values)
+  ├── DB connections (SELECT only)  →   Scoring &amp; exposure calc
+  └── Cloud connections (read-only) →   Report generation
+                                        Zero data persistence</pre>
+
+    <h2>How to Verify Yourself</h2>
+    <p>We encourage you to audit the binary and network traffic:</p>
+    <pre># Verify outgoing network connections during a scan
+netstat -an | grep ESTABLISHED
+
+# Verify no PII data is written to disk during the scan
+lsof -p &lt;pid_apollo&gt; | grep REG</pre>
+    <p>No outgoing connections to third parties (analytics, telemetry, advertising) are initiated by the binary.</p>
+
+    <h2>Beta Tester Notice</h2>
+    <div class="callout callout-warning">
+      <div class="callout-content">
+        <strong>Do not connect APOLLO to production databases</strong> containing real customer data during the beta phase. Use staging environments or anonymized datasets. If you observe unexpected network activity or undocumented file writes, report it immediately to <a href="mailto:contact@aiia-tech.com">contact@aiia-tech.com</a>.
+      </div>
+    </div>
+
+    <h2>Responsible Disclosure</h2>
+    <p>If you identify a security or privacy issue, please report it privately before any public disclosure:</p>
+    <p><strong>contact@aiia-tech.com</strong><br>
+    Subject: <code>[SECURITY] APOLLO Data Auditor &mdash; &lt;short description&gt;</code></p>
+    <p>We commit to acknowledging within 48h and resolving confirmed issues within 30 days.</p>
+
+    <h2>Legal Basis</h2>
+    <p>This document is provided as a transparency commitment to users. It does not constitute a formal DPA (Data Processing Agreement). Enterprise customers requiring a DPA should contact <a href="mailto:contact@aiia-tech.com">contact@aiia-tech.com</a>.</p>
+    <p>APOLLO&#8482; Data Auditor is governed by the <a href="license.html">Business Source License 1.1</a> and French law.</p>
+
+    <p class="text-muted"><em>Last updated: 2026 &mdash; Gilles Gabriel / aiia-tech.com</em></p>
+
+  </div>
+</main>
+</body>
+</html>

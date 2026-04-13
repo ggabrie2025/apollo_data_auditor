@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Modules | APOLLO™ Data Auditor Docs</title>
+  <meta name="description" content="APOLLO™ Data Auditor dashboard: 6 modules across 4 audiences. Risk Exposure, Compliance, Data Protection, Intelligence, Executive, and Scoreboard.">
+  <meta name="keywords"    content="APOLLO dashboard, risk exposure, GDPR compliance module, data protection score, AI readiness, scoreboard">
+  <meta name="author"      content="aiia-tech.com">
+  <meta name="robots"      content="index, follow">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://ggabrie2025.github.io/apollo_data_auditor/docs/modules.html">
+  <meta property="og:title"       content="Dashboard Modules | APOLLO™ Data Auditor">
+  <meta property="og:description" content="6 dashboard modules: Executive, Risk Exposure, Compliance, Data Protection, Intelligence, Scoreboard.">
+  <meta property="og:image"       content="https://ggabrie2025.github.io/apollo_data_auditor/docs/assets/teaser_readme.gif">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Dashboard Modules | APOLLO™ Data Auditor">
+  <meta name="twitter:description" content="129 scores across 4 modules. Financial exposure in € and $. Prioritized remediation plan.">
+  <link rel="canonical" href="https://ggabrie2025.github.io/apollo_data_auditor/docs/modules.html">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-name">APOLLO™ Docs</div>
+      <div class="logo-tagline">Data Auditor v1.7.R</div>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">Introduction</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="quick-start.html">Quick Start</a>
+    <a href="connectors.html">Connectors</a>
+    <a href="modules.html" class="active">Modules</a>
+    <a href="security.html">Security</a>
+    <a href="faq.html">FAQ</a>
+    <a href="changelog.html">Changelog</a>
+    <details>
+      <summary>Legal <span class="chevron">&#9654;</span></summary>
+      <div class="legal-links">
+        <a href="legal/license.html">License (BSL 1.1)</a>
+        <a href="legal/data-privacy.html">Data Privacy</a>
+        <a href="legal/security-policy.html">Security Policy</a>
+        <a href="legal/third-party.html">Third-Party Licenses</a>
+        <a href="legal/cla.html">CLA</a>
+        <a href="legal/notice.html">Notice</a>
+      </div>
+    </details>
+  </div>
+  <div class="sidebar-footer">
+    &copy; 2025-2026 aiia-tech.com<br>
+    APOLLO&#8482; is a registered trademark.
+  </div>
+</nav>
+
+<main class="content">
+
+  <div class="page-header">
+    <span class="page-label">Dashboard</span>
+    <h1>Dashboard Modules</h1>
+    <p>6 modules, 4 audiences. 129 scores. All values computed from your actual scan &mdash; zero hardcoded constants.</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Module</th><th>For</th><th>What It Shows</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Executive</strong></td>
+        <td>CEO, CFO</td>
+        <td>Global score, trajectory, top risks summary</td>
+      </tr>
+      <tr>
+        <td><strong>Risk Exposure</strong></td>
+        <td>CEO, CFO, Consultant</td>
+        <td>Financial exposure (&euro;/$), Breach Theater simulation</td>
+      </tr>
+      <tr>
+        <td><strong>Compliance</strong></td>
+        <td>DPO, Legal, CISO</td>
+        <td>GDPR Art.9/30/32, NIS2, SOC2, CCPA, AI Act</td>
+      </tr>
+      <tr>
+        <td><strong>Data Protection</strong></td>
+        <td>MSP, Backup, IT</td>
+        <td>Backup resilience, encryption, data hygiene</td>
+      </tr>
+      <tr>
+        <td><strong>Intelligence</strong></td>
+        <td>CTO, ESN, AI Integrator</td>
+        <td>AI Readiness, data quality, blockers, AI Act pre-compliance</td>
+      </tr>
+      <tr>
+        <td><strong>Scoreboard</strong></td>
+        <td>Auditor, Consultant</td>
+        <td>71 scores, 319 metrics &mdash; full registry with grades</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- EXECUTIVE -->
+  <h2>Executive</h2>
+  <p><strong>For:</strong> CEO, CFO &mdash; the 30-second view.</p>
+  <ul>
+    <li>Global risk grade (A&ndash;F) with score trajectory</li>
+    <li>Top 3 risks with financial impact</li>
+    <li>Priority actions summary (P1/P2/P3)</li>
+    <li>Sources scanned + last scan date</li>
+  </ul>
+  <div class="notice-box">
+    <strong>Key metric:</strong> The global score is a weighted average of the 4 pillar scores &mdash;
+    Risk Exposure, Compliance, Data Protection, and Intelligence.
+    Each pillar weighted by regulatory impact.
+  </div>
+
+  <!-- RISK EXPOSURE -->
+  <h2>Risk Exposure</h2>
+  <p><strong>For:</strong> CEO, CFO, Consultants &mdash; the financial answer to "how much are we exposed?"</p>
+  <ul>
+    <li><strong>Financial exposure in &euro; and $</strong> &mdash; computed from PII count, source type, GDPR/CCPA penalty formulas</li>
+    <li><strong>Breach Theater</strong> &mdash; simulates a breach scenario: what fine, what PR cost, what remediation cost</li>
+    <li><strong>PII map</strong> &mdash; which files/tables have which PII types</li>
+    <li><strong>Toxic combinations</strong> &mdash; detects high-risk PII co-location (IBAN + SSN in same file)</li>
+    <li><strong>Top risk zones</strong> &mdash; directories or tables with highest exposure</li>
+  </ul>
+
+  <!-- COMPLIANCE -->
+  <h2>Compliance</h2>
+  <p><strong>For:</strong> DPO, Legal, CISO &mdash; answers the auditor's questions before they ask them.</p>
+  <ul>
+    <li><strong>GDPR Art.9</strong> &mdash; special category data detection (health, biometric, religious)</li>
+    <li><strong>GDPR Art.30</strong> &mdash; processing activities completeness</li>
+    <li><strong>GDPR Art.32</strong> &mdash; technical security measures (encryption, access control)</li>
+    <li><strong>NIS2</strong> &mdash; network and information system security posture</li>
+    <li><strong>SOC2</strong> &mdash; availability, confidentiality, security controls</li>
+    <li><strong>CCPA</strong> &mdash; California consumer rights readiness</li>
+    <li><strong>AI Act</strong> &mdash; pre-compliance for AI system data requirements</li>
+    <li><strong>Priority actions</strong> &mdash; P1/P2/P3 with deadlines and financial impact</li>
+  </ul>
+
+  <!-- DATA PROTECTION -->
+  <h2>Data Protection</h2>
+  <p><strong>For:</strong> IT leads, MSPs, backup admins &mdash; the technical security posture.</p>
+  <ul>
+    <li><strong>Backup resilience</strong> &mdash; frequency, age, coverage, offsite status</li>
+    <li><strong>Encryption coverage</strong> &mdash; which disks, databases, and cloud storage are encrypted</li>
+    <li><strong>Ransomware readiness</strong> &mdash; recovery point objective (RPO) simulation</li>
+    <li><strong>Data hygiene</strong> &mdash; stale files, duplicates, orphaned data</li>
+    <li><strong>Access control</strong> &mdash; over-permissioned users, admin ratio, dormant accounts</li>
+  </ul>
+
+  <!-- INTELLIGENCE -->
+  <h2>Intelligence</h2>
+  <p><strong>For:</strong> CTOs, ESN, AI integrators &mdash; is your data AI-ready?</p>
+  <ul>
+    <li><strong>AI Readiness score</strong> &mdash; data quality &times; classification coverage &times; utility</li>
+    <li><strong>Data quality metrics</strong> &mdash; completeness, consistency, freshness per source</li>
+    <li><strong>AI blockers</strong> &mdash; what prevents AI training: PII contamination, missing labels, schema instability</li>
+    <li><strong>AI Act pre-compliance</strong> &mdash; Article 10 data governance requirements</li>
+  </ul>
+
+  <!-- SCOREBOARD -->
+  <h2>Scoreboard</h2>
+  <p><strong>For:</strong> Auditors, consultants &mdash; full transparency, all metrics, no black box.</p>
+  <ul>
+    <li>71 scores with grade (A&ndash;F), value, and formula reference</li>
+    <li>319 raw metrics (D-IDs) &mdash; the data points that feed the scores</li>
+    <li>Full registry with D-ID, source, and computation trace</li>
+    <li>Export to JSON for integration with your own audit tools</li>
+  </ul>
+
+  <div class="callout callout-info">
+    <div class="callout-content">
+      <strong>All values are computed from your actual scan.</strong>
+      Zero hardcoded constants. Zero fake defaults. If a source is not scanned, the corresponding scores are absent &mdash; not set to zero.
+    </div>
+  </div>
+
+  <div style="margin-top:40px">
+    <a href="security.html" class="cta-button">Read Security Details &rarr;</a>
+  </div>
+
+</main>
+</body>
+</html>

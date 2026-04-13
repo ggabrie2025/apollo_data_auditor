@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Start | APOLLO™ Data Auditor Docs</title>
+  <meta name="description" content="Install and launch APOLLO™ Data Auditor in minutes. Download the binary for Windows, Linux, or macOS and start your first scan.">
+  <meta name="keywords"    content="APOLLO install, quick start, download, Windows, Linux, macOS, data auditor setup">
+  <meta name="author"      content="aiia-tech.com">
+  <meta name="robots"      content="index, follow">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://ggabrie2025.github.io/apollo_data_auditor/docs/quick-start.html">
+  <meta property="og:title"       content="Quick Start | APOLLO™ Data Auditor">
+  <meta property="og:description" content="Download and launch APOLLO in minutes. Windows, Linux, macOS.">
+  <meta property="og:image"       content="https://ggabrie2025.github.io/apollo_data_auditor/docs/assets/teaser_readme.gif">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Quick Start | APOLLO™ Data Auditor">
+  <meta name="twitter:description" content="Install APOLLO Data Auditor in minutes on Windows, Linux, or macOS.">
+  <link rel="canonical" href="https://ggabrie2025.github.io/apollo_data_auditor/docs/quick-start.html">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-name">APOLLO™ Docs</div>
+      <div class="logo-tagline">Data Auditor v1.7.R</div>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">Introduction</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="quick-start.html" class="active">Quick Start</a>
+    <a href="connectors.html">Connectors</a>
+    <a href="modules.html">Modules</a>
+    <a href="security.html">Security</a>
+    <a href="faq.html">FAQ</a>
+    <a href="changelog.html">Changelog</a>
+    <details>
+      <summary>Legal <span class="chevron">&#9654;</span></summary>
+      <div class="legal-links">
+        <a href="legal/license.html">License (BSL 1.1)</a>
+        <a href="legal/data-privacy.html">Data Privacy</a>
+        <a href="legal/security-policy.html">Security Policy</a>
+        <a href="legal/third-party.html">Third-Party Licenses</a>
+        <a href="legal/cla.html">CLA</a>
+        <a href="legal/notice.html">Notice</a>
+      </div>
+    </details>
+  </div>
+  <div class="sidebar-footer">
+    &copy; 2025-2026 aiia-tech.com<br>
+    APOLLO&#8482; is a registered trademark.
+  </div>
+</nav>
+
+<main class="content">
+
+  <div class="page-header">
+    <span class="page-label">Installation</span>
+    <h1>Quick Start</h1>
+    <p>Deployed in minutes. Not weeks. No consultant needed.</p>
+  </div>
+
+  <!-- STEP 1 — DOWNLOAD -->
+  <h2>Step 1 — Download</h2>
+  <p>Go to <a href="https://github.com/ggabrie2025/apollo_data_auditor/releases/latest" target="_blank">Releases</a> and download the binary for your OS:</p>
+
+  <div class="download-grid">
+    <div class="dl-card">
+      <div class="dl-os">Windows 10/11</div>
+      <div class="dl-file">apollo-agent.exe</div>
+      <a href="https://github.com/ggabrie2025/apollo_data_auditor/releases/latest" class="dl-btn" target="_blank">&#8595; Download</a>
+    </div>
+    <div class="dl-card">
+      <div class="dl-os">Linux (Ubuntu 20.04+, Debian 11+)</div>
+      <div class="dl-file">apollo-agent</div>
+      <a href="https://github.com/ggabrie2025/apollo_data_auditor/releases/latest" class="dl-btn" target="_blank">&#8595; Download</a>
+    </div>
+    <div class="dl-card">
+      <div class="dl-os">macOS 12+ (Apple Silicon &amp; Intel)</div>
+      <div class="dl-file">apollo-agent-macos</div>
+      <a href="https://github.com/ggabrie2025/apollo_data_auditor/releases/latest" class="dl-btn" target="_blank">&#8595; Download</a>
+    </div>
+  </div>
+
+  <div class="callout callout-info">
+    <div class="callout-content">
+      <strong>SHA256 integrity check.</strong> Each release includes a <code>SHA256SUMS.txt</code>.
+      Verify your binary before running &mdash; see <a href="security.html">Security</a> for instructions.
+    </div>
+  </div>
+
+  <!-- STEP 2 — LAUNCH -->
+  <h2>Step 2 — Launch</h2>
+
+  <h3>Windows</h3>
+  <p>Open PowerShell in the download folder and run:</p>
+  <pre>.\apollo-agent.exe --serve</pre>
+
+  <h3>Linux / macOS</h3>
+  <pre>chmod +x ./apollo-agent
+./apollo-agent --serve</pre>
+
+  <div class="callout callout-success">
+    <div class="callout-content">
+      The browser opens automatically at <code>http://localhost:8052</code>
+    </div>
+  </div>
+
+  <!-- STEP 3 — USE -->
+  <h2>Step 3 — Use</h2>
+  <p>
+    Enter your API key and start scanning. Get your API key at
+    <a href="https://app.aiia-tech.com/data-auditor-en" target="_blank">app.aiia-tech.com/data-auditor-en</a>.
+  </p>
+
+  <div class="steps-row">
+    <div class="step-card">
+      <div class="step-num">&#9312;</div>
+      <div class="step-title">Enter API Key</div>
+      <div class="step-body">Paste your key from the portal. Free beta gives 25 scans.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">&#9313;</div>
+      <div class="step-title">Select Sources</div>
+      <div class="step-body">Choose what to scan: files, databases, cloud, directory, ERP.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">&#9314;</div>
+      <div class="step-title">Get Results</div>
+      <div class="step-body">Dashboard shows exposure in &euro;/$, compliance gaps, and priority actions.</div>
+    </div>
+  </div>
+
+  <!-- WINDOWS TROUBLESHOOTING -->
+  <h2>Windows Troubleshooting</h2>
+
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>The window opens and closes immediately</summary>
+      <div class="faq-body">
+        <p>Windows blocks executables downloaded from the internet. Use one of these methods:</p>
+        <p><strong>Option 1 &mdash; PowerShell (as administrator):</strong></p>
+        <pre>Unblock-File .\apollo-agent.exe
+.\apollo-agent.exe --serve</pre>
+        <p><strong>Option 2 &mdash; File Explorer:</strong><br>
+        Right-click <code>apollo-agent.exe</code> &rarr; Properties &rarr; check <strong>Unblock</strong> at the bottom &rarr; OK</p>
+        <p><strong>Option 3 &mdash; SmartScreen popup:</strong><br>
+        If a blue SmartScreen dialog appears &rarr; click <strong>More info</strong> &rarr; <strong>Run anyway</strong></p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>I don't see the error message (window closes too fast)</summary>
+      <div class="faq-body">
+        <p>Open PowerShell <strong>first</strong>, then run the command from inside it &mdash;
+        the window stays open and shows the error.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>The browser does not open automatically</summary>
+      <div class="faq-body">
+        <p>Navigate manually to <code>http://localhost:8052</code> in your browser.
+        The server is running even if the browser did not open.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>Antivirus flags the binary</summary>
+      <div class="faq-body">
+        <p>PyInstaller-packed executables are sometimes flagged by AV heuristics.
+        Verify the SHA256 against <code>SHA256SUMS.txt</code> from the release to confirm integrity,
+        then add an exception in your AV for the APOLLO binary.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- REQUIREMENTS -->
+  <h2>Requirements</h2>
+  <table>
+    <thead>
+      <tr><th>Platform</th><th>Requirement</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Windows</td><td>Windows 10/11 (x64)</td></tr>
+      <tr><td>Linux</td><td>Ubuntu 20.04+, Debian 11+ (x64)</td></tr>
+      <tr><td>macOS</td><td>macOS 12+ (Apple Silicon &amp; Intel)</td></tr>
+      <tr><td>RAM</td><td>4 GB minimum</td></tr>
+      <tr><td>Network</td><td>Access to data sources + internet (for cloud hub)</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:40px">
+    <a href="connectors.html" class="cta-button">View Connectors &rarr;</a>
+  </div>
+
+</main>
+</body>
+</html>

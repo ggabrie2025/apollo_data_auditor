@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ | APOLLO™ Data Auditor Docs</title>
+  <meta name="description" content="Frequently asked questions about APOLLO™ Data Auditor: troubleshooting, data privacy, comparison with Vanta/OneTrust, scan duration, and beta access.">
+  <meta name="keywords"    content="APOLLO FAQ, data auditor troubleshooting, GDPR tool questions, PII scanner help, beta access">
+  <meta name="author"      content="aiia-tech.com">
+  <meta name="robots"      content="index, follow">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://ggabrie2025.github.io/apollo_data_auditor/docs/faq.html">
+  <meta property="og:title"       content="FAQ | APOLLO™ Data Auditor">
+  <meta property="og:description" content="Answers to the most common questions about APOLLO Data Auditor.">
+  <meta property="og:image"       content="https://ggabrie2025.github.io/apollo_data_auditor/docs/assets/teaser_readme.gif">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="FAQ | APOLLO™ Data Auditor">
+  <meta name="twitter:description" content="Troubleshooting, privacy, comparison, and beta access questions answered.">
+  <link rel="canonical" href="https://ggabrie2025.github.io/apollo_data_auditor/docs/faq.html">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-name">APOLLO™ Docs</div>
+      <div class="logo-tagline">Data Auditor v1.7.R</div>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">Introduction</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="quick-start.html">Quick Start</a>
+    <a href="connectors.html">Connectors</a>
+    <a href="modules.html">Modules</a>
+    <a href="security.html">Security</a>
+    <a href="faq.html" class="active">FAQ</a>
+    <a href="changelog.html">Changelog</a>
+    <details>
+      <summary>Legal <span class="chevron">&#9654;</span></summary>
+      <div class="legal-links">
+        <a href="legal/license.html">License (BSL 1.1)</a>
+        <a href="legal/data-privacy.html">Data Privacy</a>
+        <a href="legal/security-policy.html">Security Policy</a>
+        <a href="legal/third-party.html">Third-Party Licenses</a>
+        <a href="legal/cla.html">CLA</a>
+        <a href="legal/notice.html">Notice</a>
+      </div>
+    </details>
+  </div>
+  <div class="sidebar-footer">
+    &copy; 2025-2026 aiia-tech.com<br>
+    APOLLO&#8482; is a registered trademark.
+  </div>
+</nav>
+
+<main class="content">
+
+  <div class="page-header">
+    <span class="page-label">Help</span>
+    <h1>FAQ</h1>
+    <p>Common questions about installation, privacy, and how APOLLO compares to other tools.</p>
+  </div>
+
+  <!-- WINDOWS TROUBLESHOOTING -->
+  <h2>Windows Troubleshooting</h2>
+  <div class="faq-list">
+
+    <details class="faq-item">
+      <summary>The window opens and closes immediately after double-clicking</summary>
+      <div class="faq-body">
+        <p>Windows Defender SmartScreen or Mark-of-the-Web blocks executables downloaded from the internet.</p>
+        <p><strong>Fix 1 &mdash; Unblock via PowerShell (Administrator):</strong></p>
+        <pre>Unblock-File .\apollo-agent.exe
+.\apollo-agent.exe --serve</pre>
+        <p><strong>Fix 2 &mdash; File Explorer:</strong> Right-click <code>apollo-agent.exe</code> &rarr; Properties &rarr; check <strong>Unblock</strong> at the bottom &rarr; OK</p>
+        <p><strong>Fix 3 &mdash; SmartScreen popup:</strong> Click <strong>More info</strong> &rarr; <strong>Run anyway</strong></p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>I can't see the error message — the window closes too fast</summary>
+      <div class="faq-body">
+        <p>Open PowerShell <strong>first</strong>, navigate to the download folder, then run the command &mdash; the terminal stays open and shows all output:</p>
+        <pre>cd C:\Users\YourName\Downloads
+.\apollo-agent.exe --serve</pre>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>The browser doesn't open automatically</summary>
+      <div class="faq-body">
+        <p>Navigate manually to <strong><code>http://localhost:8052</code></strong> in your browser. The agent server is running even if the browser window did not open.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>My antivirus flags the binary</summary>
+      <div class="faq-body">
+        <p>PyInstaller-packed executables are sometimes flagged by heuristic AV engines (false positive). Steps:</p>
+        <p>1. Verify the SHA256 checksum against <code>SHA256SUMS.txt</code> from the <a href="https://github.com/ggabrie2025/apollo_data_auditor/releases/latest" target="_blank">release page</a>.</p>
+        <p>2. If the hash matches, the binary is authentic. Add an AV exception for the APOLLO executable.</p>
+        <p>3. If the hash does not match &mdash; do not run the binary and contact <a href="mailto:contact@aiia-tech.com">contact@aiia-tech.com</a>.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>The agent starts but the dashboard shows no data after scanning</summary>
+      <div class="faq-body">
+        <p>Check that:</p>
+        <p>1. Your API key is valid and not expired (check at <a href="https://app.aiia-tech.com/data-auditor-en" target="_blank">app.aiia-tech.com/data-auditor-en</a>).</p>
+        <p>2. The agent has internet access to reach the cloud hub (port 443 outbound).</p>
+        <p>3. The scan completed without errors &mdash; check the agent log output for any <code>ERROR</code> lines.</p>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- PRIVACY & DATA -->
+  <h2>Privacy &amp; Data</h2>
+  <div class="faq-list">
+
+    <details class="faq-item">
+      <summary>What data does APOLLO collect and send to the cloud?</summary>
+      <div class="faq-body">
+        <p><strong>Only counters and metadata</strong> &mdash; never PII values.</p>
+        <p>Examples of what transits:</p>
+        <ul>
+          <li>"156 IBAN detected in MySQL source"</li>
+          <li>"3 files with SSN in /accounting/"</li>
+          <li>"Encryption: disk not encrypted"</li>
+        </ul>
+        <p>Examples of what <strong>never</strong> leaves your infrastructure:</p>
+        <ul>
+          <li>The actual IBAN values</li>
+          <li>File contents</li>
+          <li>Database rows</li>
+          <li>Emails, names, passwords</li>
+        </ul>
+        <p>See the full <a href="legal/data-privacy.html">Data Privacy Statement</a> for details.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>Is my data stored in the cloud after the scan?</summary>
+      <div class="faq-body">
+        <p><strong>No.</strong> Zero data persistence in the cloud after report generation. Metadata is used to compute scores and generate the report, then discarded. Nothing is stored, sold, or shared with third parties.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>Can I verify what the agent sends over the network?</summary>
+      <div class="faq-body">
+        <p>Yes. During a scan, monitor outgoing connections:</p>
+        <pre>netstat -an | grep ESTABLISHED</pre>
+        <p>You will only see connections to the APOLLO Cloud Hub. No third-party analytics or telemetry endpoints.</p>
+        <p>You can also check for unexpected disk writes during the scan:</p>
+        <pre>lsof -p &lt;pid_apollo&gt; | grep REG</pre>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>Is APOLLO itself GDPR compliant?</summary>
+      <div class="faq-body">
+        <p>Yes. APOLLO processes only anonymized metadata (counters). No PII is collected or retained by aiia-tech.com. The product is GDPR-by-design: local processing, TLS 1.3 in transit, zero cloud persistence.</p>
+        <p>Enterprise customers requiring a formal DPA should contact <a href="mailto:contact@aiia-tech.com">contact@aiia-tech.com</a>.</p>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- COMPARISON -->
+  <h2>Comparison</h2>
+  <div class="faq-list">
+
+    <details class="faq-item">
+      <summary>How is APOLLO different from Vanta or OneTrust?</summary>
+      <div class="faq-body">
+        <p>Vanta and OneTrust are <strong>compliance management platforms</strong> built for large enterprises ($50K&ndash;$150K/year). APOLLO is a <strong>local-first data risk auditor</strong> built for SMBs (free tier to &euro;4,999/year).</p>
+        <table>
+          <thead><tr><th></th><th>APOLLO</th><th>Vanta / OneTrust</th></tr></thead>
+          <tbody>
+            <tr><td>Target</td><td>SMB (10&ndash;500 employees)</td><td>Enterprise (500+)</td></tr>
+            <tr><td>Price</td><td>&euro;0 &ndash; &euro;4,999/year</td><td>$50K &ndash; $150K/year</td></tr>
+            <tr><td>Deployment</td><td>Minutes, no consultant</td><td>Weeks to months</td></tr>
+            <tr><td>Data</td><td>Never leaves your infra</td><td>Cloud SaaS (data sent up)</td></tr>
+            <tr><td>Output</td><td>Financial exposure in &euro;/$</td><td>Compliance checklist</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>How long does a full scan take?</summary>
+      <div class="faq-body">
+        <p>Depends on your environment size:</p>
+        <ul>
+          <li><strong>Files scan:</strong> ~100K files in 5&ndash;15 minutes</li>
+          <li><strong>Database scan:</strong> depends on row count and DB performance. Typical SMB DB: 5&ndash;20 minutes</li>
+          <li><strong>Cloud:</strong> OneDrive/SharePoint: depends on item count. Rate-limited by Microsoft Graph API.</li>
+          <li><strong>Full audit (all sources):</strong> typically &lt;48 hours for most SMB environments</li>
+        </ul>
+        <p>Up to <strong>1.16M rows/second</strong> scan rate with the native Rust I/O module.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>Can I run APOLLO on production databases?</summary>
+      <div class="faq-body">
+        <p>Yes, with care. APOLLO only issues SELECT queries &mdash; it will never write or delete data. However:</p>
+        <ul>
+          <li>We recommend running during off-peak hours for large databases</li>
+          <li>Start with a staging environment during the beta to validate results</li>
+          <li>Use the DB scan timeout parameter to limit scan duration (default: 60 seconds per table)</li>
+        </ul>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- BETA -->
+  <h2>Beta Access</h2>
+  <div class="faq-list">
+
+    <details class="faq-item">
+      <summary>How do I get beta access?</summary>
+      <div class="faq-body">
+        <p><a href="https://app.aiia-tech.com/data-auditor-en" target="_blank" class="cta-button" style="display:inline-block;margin-bottom:8px">Start Free Beta &rarr;</a><br>
+        or email <a href="mailto:contact@aiia-tech.com">contact@aiia-tech.com</a>.</p>
+        <p>Beta includes: 5 sources, 25 scans, &euro;0. No credit card. No commitment. 50 places available.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>What's included in the free beta vs paid plans?</summary>
+      <div class="faq-body">
+        <table>
+          <thead><tr><th>Feature</th><th>Beta (free)</th><th>Paid plans</th></tr></thead>
+          <tbody>
+            <tr><td>Sources</td><td>5</td><td>Up to 11</td></tr>
+            <tr><td>Scans</td><td>25</td><td>Unlimited</td></tr>
+            <tr><td>Price</td><td>&euro;0</td><td>&euro;999 &ndash; &euro;4,999/year</td></tr>
+            <tr><td>Dashboard modules</td><td>All 6</td><td>All 6</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+  </div>
+
+  <div style="margin-top:40px">
+    <a href="changelog.html" class="cta-button">View Changelog &rarr;</a>
+  </div>
+
+</main>
+</body>
+</html>

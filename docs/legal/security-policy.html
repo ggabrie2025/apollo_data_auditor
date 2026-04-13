@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Policy | APOLLO™ Data Auditor Docs</title>
+  <meta name="description" content="APOLLO™ Data Auditor Security Policy: SHA256 verification, official distribution channel, responsible disclosure, supported versions.">
+  <meta name="author"      content="aiia-tech.com">
+  <meta name="robots"      content="index, follow">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://ggabrie2025.github.io/apollo_data_auditor/docs/legal/security-policy.html">
+  <meta property="og:title"       content="Security Policy | APOLLO™ Data Auditor">
+  <meta property="og:description" content="SHA256 integrity check, official distribution, responsible disclosure policy.">
+  <link rel="canonical" href="https://ggabrie2025.github.io/apollo_data_auditor/docs/legal/security-policy.html">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="../index.html">
+      <div class="logo-name">APOLLO™ Docs</div>
+      <div class="logo-tagline">Data Auditor v1.7.R</div>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="../index.html">Introduction</a>
+    <a href="../how-it-works.html">How It Works</a>
+    <a href="../quick-start.html">Quick Start</a>
+    <a href="../connectors.html">Connectors</a>
+    <a href="../modules.html">Modules</a>
+    <a href="../security.html">Security</a>
+    <a href="../faq.html">FAQ</a>
+    <a href="../changelog.html">Changelog</a>
+    <details open>
+      <summary>Legal <span class="chevron">&#9654;</span></summary>
+      <div class="legal-links">
+        <a href="license.html">License (BSL 1.1)</a>
+        <a href="data-privacy.html">Data Privacy</a>
+        <a href="security-policy.html" class="active">Security Policy</a>
+        <a href="third-party.html">Third-Party Licenses</a>
+        <a href="cla.html">CLA</a>
+        <a href="notice.html">Notice</a>
+      </div>
+    </details>
+  </div>
+  <div class="sidebar-footer">
+    &copy; 2025-2026 aiia-tech.com<br>
+    APOLLO&#8482; is a registered trademark.
+  </div>
+</nav>
+
+<main class="content">
+  <div class="page-header">
+    <span class="page-label">Legal</span>
+    <h1>Security Policy</h1>
+    <p>APOLLO&#8482; Data Auditor</p>
+  </div>
+
+  <div class="legal-body">
+
+    <h2>Official Distribution</h2>
+    <div class="callout callout-danger">
+      <div class="callout-content">
+        <strong>APOLLO Data Auditor binaries are distributed exclusively via:</strong><br>
+        <strong>https://aiia-tech.com/download</strong><br><br>
+        Do not download binaries from other sources (GitHub Releases mirrors, torrents).
+        Any binary obtained outside this channel is unverified and potentially compromised.
+      </div>
+    </div>
+
+    <h2>Lock 1 &mdash; SHA256 Checksum</h2>
+    <p>Each release publishes a <code>SHA256SUMS.txt</code> file at <code>https://aiia-tech.com/download/SHA256SUMS.txt</code>.</p>
+    <p>This file is generated automatically by the CI pipeline (GitHub Actions) after each PyInstaller build, then deployed manually to the distribution server alongside the binaries.</p>
+
+    <h3>Manual Verification Before Execution</h3>
+
+    <p class="code-label">Linux</p>
+    <pre>EXPECTED=$(curl -sSL https://aiia-tech.com/download/SHA256SUMS.txt | grep "apollo-agent$" | awk '{print $1}')
+ACTUAL=$(sha256sum ./apollo-agent | awk '{print $1}')
+[ "$EXPECTED" = "$ACTUAL" ] && echo "OK" || echo "MISMATCH — do not execute"</pre>
+
+    <p class="code-label">macOS</p>
+    <pre>EXPECTED=$(curl -sSL https://aiia-tech.com/download/SHA256SUMS.txt | grep "apollo-agent-macos$" | awk '{print $1}')
+ACTUAL=$(shasum -a 256 ./apollo-agent-macos | awk '{print $1}')
+[ "$EXPECTED" = "$ACTUAL" ] && echo "OK" || echo "MISMATCH — do not execute"</pre>
+
+    <p class="code-label">Windows (PowerShell)</p>
+    <pre>$expected = (Invoke-WebRequest https://aiia-tech.com/download/SHA256SUMS.txt).Content `
+  | Select-String "apollo-agent.exe" | ForEach-Object { $_ -split '\s+' | Select-Object -First 1 }
+$actual = (Get-FileHash .\apollo-agent.exe -Algorithm SHA256).Hash.ToLower()
+if ($expected -eq $actual) { "OK" } else { "MISMATCH - do not execute" }</pre>
+
+    <h2>Lock 2 &mdash; Automatic Verification via install.sh</h2>
+    <p>The <code>install.sh</code> script integrates SHA256 verification before any installation:</p>
+    <pre>curl -sSL https://aiia-tech.com/download/install.sh | bash</pre>
+
+    <p>Behavior:</p>
+    <ul>
+      <li>Downloads the binary from <code>aiia-tech.com/download/apollo-agent</code></li>
+      <li>Downloads <code>SHA256SUMS.txt</code></li>
+      <li>Compares hashes &mdash; on mismatch:</li>
+    </ul>
+    <pre>======================================================
+  BINARY INTEGRITY CHECK FAILED
+  Do not execute this binary.
+  Contact: contact@aiia-tech.com
+======================================================</pre>
+    <ul>
+      <li>On success: installs to <code>/opt/apollo-agent/</code> and creates symlink <code>/usr/local/bin/apollo-agent</code></li>
+    </ul>
+
+    <h2>Reporting a Suspect Binary</h2>
+    <p>If you believe you have downloaded a corrupted or altered binary:</p>
+    <ol>
+      <li><strong>Do not execute the binary</strong></li>
+      <li>Calculate its SHA256:
+        <ul>
+          <li>Linux/macOS: <code>sha256sum apollo-agent</code> or <code>shasum -a 256 apollo-agent-macos</code></li>
+          <li>Windows: <code>Get-FileHash apollo-agent.exe -Algorithm SHA256</code></li>
+        </ul>
+      </li>
+      <li>Compare with <code>SHA256SUMS.txt</code> at <code>https://aiia-tech.com/download/SHA256SUMS.txt</code></li>
+      <li>Contact: <strong>contact@aiia-tech.com</strong>
+        <ul>
+          <li>Subject: <code>[SECURITY] Suspect binary - Apollo Data Auditor vX.Y.Z</code></li>
+          <li>Include: SHA256 of the binary, OS, download source</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h2>Disclosure Policy</h2>
+    <ul>
+      <li>Response within <strong>48h</strong> to security reports</li>
+      <li>Responsible disclosure: <strong>90 days</strong> before public disclosure</li>
+      <li>Contact: <a href="mailto:contact@aiia-tech.com">contact@aiia-tech.com</a></li>
+    </ul>
+
+    <h2>Supported Versions</h2>
+    <table>
+      <thead><tr><th>Version</th><th>Supported</th></tr></thead>
+      <tbody>
+        <tr><td><code>1.7.R</code> (current)</td><td>&#10003; Yes</td></tr>
+        <tr><td>&lt; 1.7</td><td>&#10007; No</td></tr>
+      </tbody>
+    </table>
+
+    <p class="text-muted"><strong>Copyright:</strong> (c) 2025-2026 Gilles Gabriel / aiia-tech.com</p>
+
+  </div>
+</main>
+</body>
+</html>

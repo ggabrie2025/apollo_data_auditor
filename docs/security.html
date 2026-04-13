@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security | APOLLO™ Data Auditor Docs</title>
+  <meta name="description" content="APOLLO™ Data Auditor security model: zero data exfiltration, TLS 1.3, SHA256 integrity check, read-only connectors, GDPR by design.">
+  <meta name="keywords"    content="APOLLO security, zero data exfiltration, TLS 1.3, SHA256, GDPR by design, local-first privacy">
+  <meta name="author"      content="aiia-tech.com">
+  <meta name="robots"      content="index, follow">
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://ggabrie2025.github.io/apollo_data_auditor/docs/security.html">
+  <meta property="og:title"       content="Security | APOLLO™ Data Auditor">
+  <meta property="og:description" content="Zero data exfiltration. TLS 1.3. SHA256 binary integrity. GDPR by design. Local-first architecture.">
+  <meta property="og:image"       content="https://ggabrie2025.github.io/apollo_data_auditor/docs/assets/teaser_readme.gif">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Security | APOLLO™ Data Auditor">
+  <meta name="twitter:description" content="Zero data exfiltration by architecture. TLS 1.3. SHA256 integrity check.">
+  <link rel="canonical" href="https://ggabrie2025.github.io/apollo_data_auditor/docs/security.html">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <a href="index.html">
+      <div class="logo-name">APOLLO™ Docs</div>
+      <div class="logo-tagline">Data Auditor v1.7.R</div>
+    </a>
+  </div>
+  <div class="sidebar-nav">
+    <a href="index.html">Introduction</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="quick-start.html">Quick Start</a>
+    <a href="connectors.html">Connectors</a>
+    <a href="modules.html">Modules</a>
+    <a href="security.html" class="active">Security</a>
+    <a href="faq.html">FAQ</a>
+    <a href="changelog.html">Changelog</a>
+    <details>
+      <summary>Legal <span class="chevron">&#9654;</span></summary>
+      <div class="legal-links">
+        <a href="legal/license.html">License (BSL 1.1)</a>
+        <a href="legal/data-privacy.html">Data Privacy</a>
+        <a href="legal/security-policy.html">Security Policy</a>
+        <a href="legal/third-party.html">Third-Party Licenses</a>
+        <a href="legal/cla.html">CLA</a>
+        <a href="legal/notice.html">Notice</a>
+      </div>
+    </details>
+  </div>
+  <div class="sidebar-footer">
+    &copy; 2025-2026 aiia-tech.com<br>
+    APOLLO&#8482; is a registered trademark.
+  </div>
+</nav>
+
+<main class="content">
+
+  <div class="page-header">
+    <span class="page-label">Security</span>
+    <h1>Security</h1>
+    <p>Zero data exfiltration &mdash; by architecture, not by promise.</p>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">Zero Data Exfiltration</div>
+      <div class="card-desc">PII values never leave your infrastructure. Only counters and metadata transit to the cloud hub.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">TLS 1.3</div>
+      <div class="card-desc">All communication between the agent and cloud hub is encrypted with TLS 1.3. No plaintext transmission.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Read-Only Agent</div>
+      <div class="card-desc">The agent only issues SELECT queries and read-only API calls. No writes, no deletes, no schema changes.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">SHA256 Integrity</div>
+      <div class="card-desc">Every binary release is signed with SHA256. Verify before running &mdash; mismatches abort installation.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">GDPR by Design</div>
+      <div class="card-desc">No data persistence in the cloud after report generation. No analytics, no telemetry, no third-party tracking in the agent.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Native Rust Agent</div>
+      <div class="card-desc">No interpreter, no server, no dependencies on the client machine. Autonomous packaged binary (PyInstaller + Rust native module).</div>
+    </div>
+  </div>
+
+  <h2>What Stays vs What Transits</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Stays on your infrastructure</th>
+        <th>&#8594; Transits to the cloud</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>File contents</td><td>File count per type</td></tr>
+      <tr><td>Database rows</td><td>Table/column names + PII flags</td></tr>
+      <tr><td>Emails, names, IBANs</td><td>PII category counters</td></tr>
+      <tr><td>Documents, spreadsheets</td><td>Metadata (size, date, permissions)</td></tr>
+      <tr><td>Passwords, tokens</td><td>Encryption status (yes/no)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Binary Integrity Verification</h2>
+  <p>Each release includes a <code>SHA256SUMS.txt</code> file. Verify before running:</p>
+
+  <p class="code-label">Linux</p>
+  <pre>EXPECTED=$(curl -sSL https://aiia-tech.com/download/SHA256SUMS.txt | grep "apollo-agent$" | awk '{print $1}')
+ACTUAL=$(sha256sum ./apollo-agent | awk '{print $1}')
+[ "$EXPECTED" = "$ACTUAL" ] && echo "OK" || echo "MISMATCH — do not execute"</pre>
+
+  <p class="code-label">macOS</p>
+  <pre>EXPECTED=$(curl -sSL https://aiia-tech.com/download/SHA256SUMS.txt | grep "apollo-agent-macos$" | awk '{print $1}')
+ACTUAL=$(shasum -a 256 ./apollo-agent-macos | awk '{print $1}')
+[ "$EXPECTED" = "$ACTUAL" ] && echo "OK" || echo "MISMATCH — do not execute"</pre>
+
+  <p class="code-label">Windows (PowerShell)</p>
+  <pre>$expected = (Invoke-WebRequest https://aiia-tech.com/download/SHA256SUMS.txt).Content `
+  | Select-String "apollo-agent.exe" | ForEach-Object { $_ -split '\s+' | Select-Object -First 1 }
+$actual = (Get-FileHash .\apollo-agent.exe -Algorithm SHA256).Hash.ToLower()
+if ($expected -eq $actual) { "OK" } else { "MISMATCH - do not execute" }</pre>
+
+  <h2>How to Verify Yourself</h2>
+  <p>You are encouraged to audit the agent and its network traffic:</p>
+  <pre># Verify outgoing network connections during a scan
+# (no connections to undocumented third parties expected)
+netstat -an | grep ESTABLISHED
+
+# Verify no PII data is written to disk during the scan
+# (only the final report is written to the directory you specify)
+lsof -p &lt;pid_apollo&gt; | grep REG</pre>
+
+  <p>No outgoing connections to third parties (analytics, telemetry, advertising) are initiated by the agent.</p>
+
+  <h2>Responsible Disclosure</h2>
+  <div class="callout callout-warning">
+    <div class="callout-content">
+      <strong>Found a security issue?</strong> Please report it privately before any public disclosure.<br>
+      Email: <a href="mailto:contact@aiia-tech.com">contact@aiia-tech.com</a><br>
+      Subject: <code>[SECURITY] APOLLO Data Auditor &mdash; &lt;short description&gt;</code><br>
+      <br>
+      We commit to acknowledging within 48h and resolving confirmed issues within 30 days.
+      Public disclosure: 90-day embargo.
+    </div>
+  </div>
+
+  <h2>Supported Versions</h2>
+  <table>
+    <thead>
+      <tr><th>Version</th><th>Security Support</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>1.7.R</code> (current)</td><td>&#10003; Supported</td></tr>
+      <tr><td>&lt; 1.7</td><td>&#10007; Not supported &mdash; upgrade required</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:40px">
+    <a href="legal/data-privacy.html" class="cta-button">Read Data Privacy Statement &rarr;</a>
+    &nbsp;&nbsp;
+    <a href="legal/security-policy.html" style="font-size:14px; color:var(--text-secondary)">Full Security Policy &rarr;</a>
+  </div>
+
+</main>
+</body>
+</html>
