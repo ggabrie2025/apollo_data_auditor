@@ -63,6 +63,59 @@
     <p>All notable changes to APOLLO™ Data Auditor.</p>
   </div>
 
+  <!-- cloud-2026-04 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">cloud-2026-04</span>
+      <span class="version-date">2026-04-15</span>
+    </div>
+    <p class="text-muted"><em>Cloud Hub &mdash; Dashboard &amp; Scoring. All features below were driven by alpha tester feedback.</em></p>
+
+    <span class="change-type added">Performance</span>
+    <p class="text-muted"><em>&ldquo;The dashboard is slow to load after a multi-source scan.&rdquo;</em></p>
+    <ul>
+      <li>Redis cache layer: dashboard responses served from cache &mdash; 3&ndash;5&times; faster load after first scan</li>
+      <li>8 gunicorn workers in parallel for concurrent ingests during beta</li>
+    </ul>
+
+    <span class="change-type added">US Compliance</span>
+    <p class="text-muted"><em>&ldquo;We operate in the US &mdash; CCPA doesn&rsquo;t cover our state-by-state obligations.&rdquo;</em></p>
+    <ul>
+      <li>US Multi-State Privacy Landscape: 50-state table with revenue-based thresholds and cure period per state</li>
+      <li>CCPA framework panel in Executive tab (US mode)</li>
+      <li>Corrective actions tagged <code>article_us</code> in recommendations</li>
+    </ul>
+
+    <span class="change-type added">Insurance Readiness V2</span>
+    <p class="text-muted"><em>&ldquo;Our broker needs a cyber insurance readiness assessment before renewal.&rdquo;</em></p>
+    <ul>
+      <li>8 cyber insurance controls scored and graded (backend + dashboard)</li>
+      <li>Declarative questionnaire: IRP, coverage, deductible, exclusions</li>
+      <li>Insurance Readiness section in Executive PDF export</li>
+    </ul>
+
+    <span class="change-type added">What-If Engine</span>
+    <p class="text-muted"><em>&ldquo;We want to see what changes concretely if we fix a specific gap.&rdquo;</em></p>
+    <ul>
+      <li>Exact GDPR/CCPA penalty recalculation per selected corrective action</li>
+      <li>Breach cost projection with CEO-facing scenarios</li>
+      <li>Available across 4 tabs: Executive, Risk, Compliance, Intelligence</li>
+    </ul>
+
+    <span class="change-type added">Cross-Source Correlations (SCI)</span>
+    <p class="text-muted"><em>&ldquo;Risks are shown source by source &mdash; we don&rsquo;t see the connections between them.&rdquo;</em></p>
+    <ul>
+      <li>SCI cascade badge on priority actions &mdash; shows which actions unlock multiple risk reductions</li>
+      <li>New APP&harr;FILES correlation: shadow data detection across ERP and file systems</li>
+    </ul>
+
+    <span class="change-type added">JSON Export</span>
+    <p class="text-muted"><em>&ldquo;We want to integrate results into our internal tools.&rdquo;</em></p>
+    <ul>
+      <li>Full dashboard export via <code>exportAllTabsJSON()</code>: all 6 tabs consolidated with client metadata in a single file</li>
+    </ul>
+  </div>
+
   <!-- v1.7.R-patch22 -->
   <div class="changelog-entry">
     <div class="changelog-header">

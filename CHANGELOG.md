@@ -1,5 +1,43 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [cloud-2026-04] — 2026-04-15
+
+> Cloud Hub — Dashboard & Scoring. All features below were driven by alpha tester feedback.
+
+### Performance
+> *"The dashboard is slow to load after a multi-source scan."*
+- Redis cache layer: dashboard responses served from cache — 3–5× faster load after first scan
+- 8 gunicorn workers in parallel for concurrent ingests during beta
+
+### US Compliance
+> *"We operate in the US — CCPA doesn't cover our state-by-state obligations."*
+- US Multi-State Privacy Landscape: 50-state table with revenue-based thresholds and cure period per state
+- CCPA framework panel in Executive tab (US mode)
+- Corrective actions tagged `article_us` in recommendations
+
+### Insurance Readiness V2
+> *"Our broker needs a cyber insurance readiness assessment before renewal."*
+- 8 cyber insurance controls scored and graded (backend + dashboard)
+- Declarative questionnaire: IRP, coverage, deductible, exclusions
+- Insurance Readiness section in Executive PDF export
+
+### What-If Engine
+> *"We want to see what changes concretely if we fix a specific gap."*
+- Exact GDPR/CCPA penalty recalculation per selected corrective action
+- Breach cost projection with CEO-facing scenarios
+- Available across 4 tabs: Executive, Risk, Compliance, Intelligence
+
+### Cross-Source Correlations (SCI)
+> *"Risks are shown source by source — we don't see the connections between them."*
+- SCI cascade badge on priority actions — shows which actions unlock multiple risk reductions
+- New APP↔FILES correlation: shadow data detection across ERP and file systems
+
+### JSON Export
+> *"We want to integrate results into our internal tools."*
+- Full dashboard export via `exportAllTabsJSON()`: all 6 tabs consolidated with client metadata in a single file
+
+---
+
 ## [1.7.R-patch22] — 2026-04-08
 
 ### Changed
