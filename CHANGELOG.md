@@ -1,5 +1,15 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch23] — 2026-04-20
+
+### Docs
+- agent/README.md: full rewrite — V1.7.R, BSL 1.1, 44 PII types, 11 connectors,
+  correct description as local scan binary (not an AI agent), Cloud Hub V3 architecture
+- agent/packaging/DEBLOCAGE_OS.md: branding "Apollo Agent" → "APOLLO Data Auditor" throughout
+- apollo_io_native/README.md: license corrected MIT → BSL 1.1 (covered by root LICENSE)
+
+---
+
 ## [cloud-2026-04] — 2026-04-15
 
 > Cloud Hub — Dashboard & Scoring. All features below were driven by alpha tester feedback.

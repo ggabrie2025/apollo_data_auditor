@@ -63,8 +63,18 @@
     <p>Deployed in minutes. Not weeks. No consultant needed.</p>
   </div>
 
+  <!-- PREREQUISITE — API KEY -->
+  <div class="callout callout-info" style="margin-bottom:32px">
+    <div class="callout-content">
+      <strong>Before you start &mdash; get your API key.</strong><br>
+      Register at <a href="https://app.aiia-tech.com/data-auditor-en" target="_blank">app.aiia-tech.com/data-auditor-en</a>
+      to receive your API key. Free beta: 25 scans, no credit card.<br>
+      You will need this key when you first launch the binary.
+    </div>
+  </div>
+
   <!-- STEP 1 — DOWNLOAD -->
-  <h2>Step 1 — Download</h2>
+  <h2>Step 1 &mdash; Download</h2>
   <p>Go to <a href="https://github.com/ggabrie2025/apollo_data_auditor/releases/latest" target="_blank">Releases</a> and download the binary for your OS:</p>
 
   <div class="download-grid">
@@ -85,19 +95,26 @@
     </div>
   </div>
 
-  <div class="callout callout-info">
-    <div class="callout-content">
-      <strong>SHA256 integrity check.</strong> Each release includes a <code>SHA256SUMS.txt</code>.
-      Verify your binary before running &mdash; see <a href="security.html">Security</a> for instructions.
-    </div>
-  </div>
+  <!-- STEP 2 — VERIFY SHA256 -->
+  <h2>Step 2 &mdash; Verify integrity (SHA256)</h2>
+  <p>Each release includes <code>SHA256SUMS.txt</code>. Always verify before running.</p>
 
-  <!-- STEP 2 — LAUNCH -->
-  <h2>Step 2 — Launch</h2>
+  <h3>Windows (PowerShell)</h3>
+  <pre>Get-FileHash .\apollo-agent.exe -Algorithm SHA256</pre>
+
+  <h3>Linux / macOS</h3>
+  <pre>sha256sum ./apollo-agent</pre>
+
+  <p>Compare the output against the hash in <code>SHA256SUMS.txt</code> from the release page.
+  If they differ &mdash; do not run the binary and contact <a href="mailto:contact@aiia-tech.com">contact@aiia-tech.com</a>.</p>
+
+  <!-- STEP 3 — LAUNCH -->
+  <h2>Step 3 &mdash; Launch</h2>
 
   <h3>Windows</h3>
   <p>Open PowerShell in the download folder and run:</p>
-  <pre>.\apollo-agent.exe --serve</pre>
+  <pre>Unblock-File .\apollo-agent.exe
+.\apollo-agent.exe --serve</pre>
 
   <h3>Linux / macOS</h3>
   <pre>chmod +x ./apollo-agent
@@ -105,22 +122,19 @@
 
   <div class="callout callout-success">
     <div class="callout-content">
-      The browser opens automatically at <code>http://localhost:8052</code>
+      The browser opens automatically at <code>http://localhost:8052</code>.
+      Enter your API key on the login screen to start scanning.
     </div>
   </div>
 
-  <!-- STEP 3 — USE -->
-  <h2>Step 3 — Use</h2>
-  <p>
-    Enter your API key and start scanning. Get your API key at
-    <a href="https://app.aiia-tech.com/data-auditor-en" target="_blank">app.aiia-tech.com/data-auditor-en</a>.
-  </p>
+  <!-- STEP 4 — SCAN -->
+  <h2>Step 4 &mdash; Scan &amp; get results</h2>
 
   <div class="steps-row">
     <div class="step-card">
       <div class="step-num">&#9312;</div>
       <div class="step-title">Enter API Key</div>
-      <div class="step-body">Paste your key from the portal. Free beta gives 25 scans.</div>
+      <div class="step-body">Paste the key from your portal. Free beta: 25 scans included.</div>
     </div>
     <div class="step-card">
       <div class="step-num">&#9313;</div>
