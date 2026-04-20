@@ -1,176 +1,122 @@
-# Apollo Data Auditor — Agent V1.6
+# APOLLO Data Auditor — Agent V1.7.R
 
-Standalone file scanner for Apollo Data Auditor. Scans file systems for metadata and PII detection, exports JSON for Hub Cloud consolidation.
+Local scan binary for APOLLO Data Auditor. Installed on client infrastructure (Windows, Linux, macOS), it scans files, databases, cloud storage, directory services, and ERP sources — detects 44 PII types — and sends metadata counters to the APOLLO Cloud Hub. No AI. No data exfiltration. Counters only.
 
 ## Features
 
-- Pure Python stdlib (single dependency: PyYAML)
-- File metadata collection via `os.walk`
-- PII detection: email, phone_fr, iban, ssn_fr
-- Configurable exclusions (extensions, paths, patterns)
-- JSON export compatible with Hub Cloud API
-- PyInstaller binary packaging (3.6MB)
+- **11 source connectors**: local files, NFS/SMB shares, PostgreSQL, MySQL, MongoDB, SQL Server, OneDrive, SharePoint, Active Directory/LDAP, Pennylane, infrastructure
+- **44 PII types detected**: IBAN, SSN (FR/US), email, phone, passport, PESEL, BSN, NIE, NISS, codice fiscale, and 34 more (EU + US)
+- **Rust I/O module** (PyO3): up to 1.16M rows/second file scan throughput
+- **Zero data exfiltration**: only metadata counters transit to the Cloud Hub — raw file contents and database rows never leave client infrastructure
+- **scores=None**: the binary exports raw metadata only — all scoring and analysis is performed server-side by the Cloud Hub
+- **PyInstaller binary**: single executable, no Python runtime required on client machines
 
 ## Installation
 
-### From Source
+### Pre-built binary (recommended)
+
+Download `apollo-agent` (macOS/Linux) or `apollo-agent.exe` (Windows) from the [releases page](https://github.com/ggabrie2025/apollo_data_auditor/releases/latest).
+
+Verify integrity before running:
 
 ```bash
-cd agent
-pip install -r requirements.txt
-
-# Run directly
-python3 -m agent.main --version
+sha256sum apollo-agent        # macOS / Linux
+Get-FileHash apollo-agent.exe # Windows PowerShell
 ```
 
-### Pre-built Binary (macOS)
+Compare against `SHA256SUMS.txt` from the release.
+
+### From source
 
 ```bash
-# Download from releases
-./apollo-agent --version
+pip install -r requirements.txt
+python3 -m agent.main --version
 ```
 
 ## Usage
 
-### Preview Mode (Dry Run)
-
 ```bash
-# Show what would be scanned without scanning
-python3 -m agent.main /path/to/scan --preview
+# Start the local agent server (opens dashboard at http://localhost:8052)
+./apollo-agent --serve
+
+# Run a file scan directly
+./apollo-agent --mode files --path /path/to/scan --output result.json
+
+# Show version
+./apollo-agent --version
 ```
 
-### Full Scan
-
-```bash
-# Scan with PII detection, output to JSON
-python3 -m agent.main /path/to/scan -o output.json
-
-# Scan without PII detection (faster)
-python3 -m agent.main /path/to/scan --no-pii -o output.json
-
-# Pretty-print JSON output
-python3 -m agent.main /path/to/scan -o output.json --pretty
-```
-
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--version` | Show version (v1.6.0) |
-| `--preview` | Dry run - show config and stats |
-| `-o, --output FILE` | Output JSON file path |
-| `--no-pii` | Skip PII scanning (faster) |
-| `--include-network-mounts` | Include NFS/SMB mounts (excluded by default) |
-| `-v, --verbose` | Show detailed progress |
+See [DEBLOCAGE_OS.md](packaging/DEBLOCAGE_OS.md) if macOS Gatekeeper or Windows SmartScreen blocks the binary.
 
 ## Output Format
 
+The agent produces a JSON file with raw metadata — no scores:
+
 ```json
 {
-  "version": "1.6.0",
-  "scan_id": "uuid",
-  "timestamp": "2025-12-11T16:50:05Z",
-  "source_path": "/scanned/path",
+  "version": "1.7.R",
+  "source_type": "files",
+  "scores": null,
   "summary": {
-    "total_files": 10,
-    "total_size_bytes": 43361,
-    "files_with_pii": 1,
-    "pii_by_type": {"email": 1},
-    "excluded_count": 2,
+    "total_files": 48210,
+    "total_size_bytes": 15728640000,
+    "files_with_pii": 312,
+    "pii_by_type": {"iban": 47, "email": 203, "ssn_fr": 12, "phone_fr": 50},
     "error_count": 0
-  },
-  "files": [...],
-  "config_used": {...}
+  }
 }
 ```
 
+`scores: null` is intentional — scoring is 100% server-side.
+
 ## PII Detection
 
-Detects 4 French-focused PII patterns:
+Detects 44 PII types across EU and US regulations:
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| `email` | RFC 5322 | user@domain.com |
-| `phone_fr` | French mobile/landline | +33 6 12 34 56 78 |
-| `iban` | Bank account number | FR76 3000 6000 0112 3456 7890 189 |
-| `ssn_fr` | NIR (Securite Sociale) | 1 85 12 75 108 123 45 |
-
-## Exclusions
-
-Default exclusions in `config/exclusions.yaml`:
-
-- **30 extensions**: .exe, .dll, .sys, .tmp, .log, .cache, etc.
-- **40 path patterns**: node_modules, .git, __pycache__, build, dist, etc.
-- **Size limits**: min 10 bytes, max 100MB
+| Category | Examples |
+|----------|---------|
+| Financial | IBAN (SEPA), IBAN-FR, bank account |
+| Identity FR | NIR (SSN), passport, driving licence |
+| Identity EU | BSN (NL), NISS (BE), PESEL (PL), DNI/NIE/NIF (ES), codice fiscale (IT) |
+| Identity US | SSN, ITIN, EIN |
+| Contact | Email, phone (FR/EU/US), mobile |
+| Healthcare | NDA, patient ID patterns |
 
 ## Architecture
 
 ```
-agent/
-├── core/
-│   ├── collector.py      # os.walk file traversal
-│   ├── exclusions.py     # YAML config loader
-│   ├── pii_scanner.py    # Regex PII detection
-│   └── exporter.py       # JSON export
-├── config/
-│   └── exclusions.yaml   # Exclusion rules
-├── models/
-│   └── contracts.py      # Dataclasses
-├── main.py               # CLI entry point
-├── requirements.txt      # PyYAML only
-└── packaging/
-    ├── apollo_agent.spec # PyInstaller config
-    └── build_macos.sh    # Build script
+Client infrastructure                  APOLLO Cloud Hub (Railway)
+┌─────────────────────────┐            ┌──────────────────────────┐
+│  apollo-agent binary    │  POST      │  Cloud Hub V3            │
+│  (this repo)            │ /api/v1/   │  scoring + dashboard     │
+│                         │ hub/ingest │                          │
+│  Scan sources           │ ─────────> │  Compute 129 scores      │
+│  Detect PII (regex)     │  metadata  │  Generate PDF reports    │
+│  Export JSON            │  counters  │  GDPR/CCPA exposure      │
+│  scores=None            │  only      │                          │
+└─────────────────────────┘            └──────────────────────────┘
 ```
 
-## Building Binary
+## Building
 
-### macOS
+Binaries are built via GitHub Actions CI on every tagged release:
 
-```bash
-cd agent/packaging
-./build_macos.sh
+- **Windows** — `windows-latest` runner, PyInstaller
+- **Linux** — `ubuntu-latest` runner, PyInstaller
+- **macOS** — local build (Apple Silicon), PyInstaller
 
-# Output:
-# - dist/apollo-agent (3.6MB CLI)
-# - dist/Apollo Agent.app (3.7MB bundle)
-```
-
-### Windows (Requires Windows machine)
-
-```bash
-cd agent/packaging
-pyinstaller apollo_agent.spec
-```
-
-## Integration with Hub Cloud
-
-The agent exports JSON that Hub Cloud V1.4 will consume:
-
-```
-Agent V1.6 (client)         Hub Cloud V1.4 (server)
-┌─────────────────┐         ┌─────────────────┐
-│ Scan files      │         │ Receive JSON    │
-│ Detect PII      │ ──JSON──│ Consolidate     │
-│ Export JSON     │         │ Score           │
-└─────────────────┘         │ Dashboard       │
-                            └─────────────────┘
-```
+See [GITHUB_ACTIONS_BUILD.md](packaging/GITHUB_ACTIONS_BUILD.md) for the full build procedure.
 
 ## Requirements
 
-- Python 3.9+ (uses `from __future__ import annotations`)
-- PyYAML >= 6.0
+- Python 3.9+ (source only — not required for pre-built binary)
+- Rust toolchain (source only — required to build the `apollo_io_native` module)
 - macOS / Windows / Linux
 
 ## License
 
-Proprietary - AIIA Tech
+BSL 1.1 — see root [LICENSE](../LICENSE) file.
 
-## Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.6.0 | 2025-12-28 | Network mount exclusion, STOP/RESET, Hub connection indicator |
-| 1.5.0 | 2025-12-23 | Fingerprint, Dedup, SmartSampler, Differential, Multi-source |
-| 1.3.0 | 2025-12-11 | Initial release - files only agent |
+| Version | Release | BSL Change Date |
+|---------|---------|----------------|
+| 1.7.R | 2026-03-08 | 2030-01-01 |

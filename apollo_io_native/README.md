@@ -215,4 +215,4 @@ except ImportError:
 
 ## License
 
-MIT License - Apollo Team
+BSL 1.1 — This module is part of APOLLO Data Auditor and is covered by the root LICENSE file.

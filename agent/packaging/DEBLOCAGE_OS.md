@@ -1,5 +1,5 @@
 ---
-title: "Deblocage OS - Apollo Agent"
+title: "Deblocage OS - APOLLO Data Auditor"
 agent: redactor
 project_id: PRJ-APOLLO
 date: 2026-03-05
@@ -9,9 +9,9 @@ type: guide
 status: active
 ---
 
-# Apollo Agent - Deblocage OS
+# APOLLO Data Auditor - Deblocage OS
 
-Ce document couvre les situations ou macOS ou Windows bloque l'execution du binaire Apollo Agent.
+Ce document couvre les situations ou macOS ou Windows bloque l'execution du binaire APOLLO Data Auditor.
 
 ---
 
@@ -88,7 +88,7 @@ cd $env:USERPROFILE\Downloads; Unblock-File .\apollo-agent.exe; .\apollo-agent.e
 L'agent affiche l'URL dans le terminal et ouvre le navigateur automatiquement :
 
 ```
-Apollo Agent V1.7.R — UI starting on http://localhost:8052/static/login.html
+APOLLO Data Auditor V1.7.R — UI starting on http://localhost:8052/static/login.html
 ```
 
 > **Note port** : si 8052 est occupe, l'agent choisit automatiquement un port libre entre 8052 et 8099.
@@ -139,7 +139,7 @@ apollo-agent.exe --version
 Resultat attendu :
 
 ```
-Apollo Agent v1.7.R
+APOLLO Data Auditor v1.7.R
 ```
 
 ---
