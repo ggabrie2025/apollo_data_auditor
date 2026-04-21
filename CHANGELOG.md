@@ -1,5 +1,14 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch24] — 2026-04-22
+
+### Fixed
+- pyo3 upgraded 0.22 → 0.24: migrate `new_bound()` → `new()` API (9 occurrences
+  across fingerprint.rs, raw_collector.rs, reader.rs, platform.rs).
+  Closes Dependabot alert #1 (LOW). KI-203 resolved.
+
+---
+
 ## [1.7.R-patch23] — 2026-04-20
 
 ### Docs

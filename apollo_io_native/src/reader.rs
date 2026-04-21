@@ -50,7 +50,7 @@ pub fn read_files_batch(
     let py_results: Vec<(String, Py<PyBytes>)> = results
         .into_iter()
         .map(|(path, content)| {
-            let py_bytes = PyBytes::new_bound(py, &content).unbind();
+            let py_bytes = PyBytes::new(py, &content).unbind();
             (path, py_bytes)
         })
         .collect();

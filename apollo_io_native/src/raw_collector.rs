@@ -414,7 +414,7 @@ pub fn collect_raw_metadata(py: Python<'_>, path: &str, zone: u8) -> PyResult<Py
     let path = Path::new(path);
 
     match collect_metadata(path, zone) {
-        Ok(meta) => Ok(PyBytes::new_bound(py, &meta.to_bytes()).into()),
+        Ok(meta) => Ok(PyBytes::new(py,&meta.to_bytes()).into()),
         Err(e) => Err(pyo3::exceptions::PyIOError::new_err(e.to_string())),
     }
 }
@@ -450,7 +450,7 @@ pub fn collect_raw_batch(
 
     Ok(results
         .into_iter()
-        .map(|bytes| PyBytes::new_bound(py, &bytes).into())
+        .map(|bytes| PyBytes::new(py,&bytes).into())
         .collect())
 }
 
@@ -466,7 +466,7 @@ pub fn parse_raw_metadata(py: Python<'_>, data: &[u8]) -> PyResult<PyObject> {
     let meta = RawFileMetadata::from_bytes(data)
         .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("Invalid data length (expected 156 bytes)"))?;
 
-    let dict = PyDict::new_bound(py);
+    let dict = PyDict::new(py);
 
     // Copy all values to avoid packed struct alignment issues
     // Tier 1: OS

@@ -23,7 +23,7 @@ use pyo3::types::PyDict;
 /// ```
 #[pyfunction]
 pub fn get_platform_info(py: Python<'_>) -> PyResult<PyObject> {
-    let dict = PyDict::new_bound(py);
+    let dict = PyDict::new(py);
 
     // OS
     dict.set_item("os", std::env::consts::OS)?;

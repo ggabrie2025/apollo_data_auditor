@@ -63,6 +63,20 @@
     <p>All notable changes to APOLLO™ Data Auditor.</p>
   </div>
 
+  <!-- 1.7.R-patch24 -->
+  <div class="changelog-entry">
+    <div class="changelog-header">
+      <span class="version-tag">1.7.R-patch24</span>
+      <span class="version-date">2026-04-22</span>
+    </div>
+    <span class="change-type fixed">Fixed</span>
+    <ul>
+      <li>PyO3 upgraded 0.22 &rarr; 0.24: migrate <code>new_bound()</code> &rarr; <code>new()</code> API
+        (9 occurrences across fingerprint.rs, raw_collector.rs, reader.rs, platform.rs).
+        Closes Dependabot alert #1 (LOW). KI-203 resolved.</li>
+    </ul>
+  </div>
+
   <!-- 1.7.R-patch23 -->
   <div class="changelog-entry">
     <div class="changelog-header">

@@ -70,7 +70,7 @@ impl Fingerprint {
 
     /// Convert to dictionary
     pub fn to_dict(&self, py: Python<'_>) -> PyResult<PyObject> {
-        let dict = pyo3::types::PyDict::new_bound(py);
+        let dict = pyo3::types::PyDict::new(py);
         dict.set_item("path_hash", &self.path_hash)?;
         dict.set_item("size", self.size)?;
         dict.set_item("mtime", self.mtime)?;
@@ -271,12 +271,12 @@ pub fn fingerprint_stats(
         *by_extension.entry(fp.extension.clone()).or_default() += 1;
     }
 
-    let dict = pyo3::types::PyDict::new_bound(py);
+    let dict = pyo3::types::PyDict::new(py);
     dict.set_item("total", total)?;
     dict.set_item("total_size_bytes", total_size)?;
     dict.set_item("total_size_mb", total_size as f64 / 1_000_000.0)?;
 
-    let zone_dict = pyo3::types::PyDict::new_bound(py);
+    let zone_dict = pyo3::types::PyDict::new(py);
     for (k, v) in by_zone {
         zone_dict.set_item(k, v)?;
     }
@@ -287,7 +287,7 @@ pub fn fingerprint_stats(
     ext_vec.sort_by(|a, b| b.1.cmp(&a.1));
     ext_vec.truncate(10);
 
-    let ext_dict = pyo3::types::PyDict::new_bound(py);
+    let ext_dict = pyo3::types::PyDict::new(py);
     for (k, v) in ext_vec {
         ext_dict.set_item(k, v)?;
     }
