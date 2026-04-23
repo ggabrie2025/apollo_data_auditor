@@ -7,6 +7,11 @@
   across fingerprint.rs, raw_collector.rs, reader.rs, platform.rs).
   Closes Dependabot alert #1 (LOW). KI-203 resolved.
 
+### Validated
+- MySQL connector validated against MariaDB 11.8 on Debian 13 (Trixie). On Debian,
+  `apt install mysql-server` installs MariaDB — the connector handles this transparently.
+  Confirmed end-to-end: scan → ingest Hub → scoring. BY DESIGN for real-world Debian deployments.
+
 ---
 
 ## [1.7.R-patch23] — 2026-04-20
