@@ -1,5 +1,12 @@
 # Data Privacy & Security Statement — APOLLO™ Data Auditor
 
+> **Ce document décrit l'architecture technique de confidentialité d'APOLLO.**  
+> Pour les documents légaux, voir :  
+> 📄 [Privacy Policy (RGPD)](./PRIVACY_POLICY.md) — droits des personnes, bases légales, contact CNIL  
+> 📄 [Data Processing Agreement / DPA](./DPA.md) — accord sous-traitant RGPD Art.28
+
+---
+
 > **TL;DR : APOLLO scanne vos données localement. Seuls des compteurs et métadonnées transitent vers le cloud. Aucune valeur PII ne quitte jamais votre infrastructure.**
 
 ---
