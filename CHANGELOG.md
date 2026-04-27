@@ -1,5 +1,14 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch25] — 2026-04-27
+
+### Fixed
+- snapshot.py: HTTP header corrected `Authorization: Bearer` → `X-API-Key` (POST + GET).
+  The `/api/v1/snapshots` endpoint requires `X-API-Key` — Bearer was returning 401 silently
+  since V1.5. `audit_snapshots` table was always empty as a result.
+
+---
+
 ## [1.7.R-patch24] — 2026-04-22
 
 ### Fixed

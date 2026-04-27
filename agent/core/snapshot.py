@@ -70,7 +70,7 @@ def save_snapshot(
         try:
             response = requests.post(
                 f"{cloud_url}/api/v1/snapshots",
-                headers={"Authorization": f"Bearer {api_key}"},
+                headers={"X-API-Key": api_key},
                 json={
                     "source_path_hash": source_hash,
                     "source_name": source_name,
@@ -154,7 +154,7 @@ def load_snapshot(source_path: str) -> Optional[Dict[str, Dict]]:
         try:
             response = requests.get(
                 f"{cloud_url}/api/v1/snapshots/{source_hash}",
-                headers={"Authorization": f"Bearer {api_key}"},
+                headers={"X-API-Key": api_key},
                 timeout=30
             )
 
