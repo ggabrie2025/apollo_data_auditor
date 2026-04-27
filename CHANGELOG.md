@@ -1,5 +1,20 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch27] — 2026-04-28
+
+### Fixed
+- snapshot: align agent HTTP fallback with Hub `/api/v1/snapshots/save` contract.
+  URL was `/api/v1/snapshots` (404) → corrected to `/api/v1/snapshots/save`.
+  Body was `{fingerprints: dict}` → now `{files: list, total_files, total_size_bytes}`
+  matching `SaveSnapshotRequest` schema. Field mapping: `size`→`size_bytes`,
+  `mtime` float→ISO datetime, `previous_pii`→`previous_pii_detected`.
+  Load: response was parsed as `.get("fingerprints")` (always `{}`) → now converts
+  `files` list to `dict[path_hash]` matching `GetSnapshotResponse` schema.
+  `audit_snapshots` table now populates after FILES scan. Completes snapshot
+  reintroduction (patch25: header, patch26: subprocess env, patch27: API contract).
+
+---
+
 ## [1.7.R-patch26] — 2026-04-28
 
 ### Fixed

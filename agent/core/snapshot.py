@@ -58,29 +58,50 @@ def save_snapshot(
 
         source_hash = _get_source_hash(source_path)
 
-        # Convert fingerprints list to dict[path_hash -> fingerprint]
-        fp_dict = {}
+        # Convert LightFingerprint objects to Hub SnapshotFileModel format
+        from datetime import datetime, timezone
+        files_list = []
+        total_size = 0
         for fp in fingerprints:
             if hasattr(fp, 'path_hash'):
-                fp_dict[fp.path_hash] = asdict(fp) if hasattr(fp, 'to_dict') else fp.to_dict()
+                mtime_dt = datetime.fromtimestamp(fp.mtime, tz=timezone.utc).isoformat()
+                files_list.append({
+                    "path_hash": fp.path_hash,
+                    "size_bytes": fp.size,
+                    "mtime": mtime_dt,
+                    "extension": fp.extension,
+                    "zone": fp.zone,
+                    "content_hash_partial": fp.content_hash_partial,
+                    "previous_score": fp.previous_score,
+                    "previous_pii_detected": fp.previous_pii,
+                    "previous_tier": fp.previous_tier,
+                })
+                total_size += fp.size
             elif isinstance(fp, dict) and 'path_hash' in fp:
-                fp_dict[fp['path_hash']] = fp
+                entry = fp.copy()
+                if 'size' in entry and 'size_bytes' not in entry:
+                    entry['size_bytes'] = entry.pop('size')
+                if 'previous_pii' in entry and 'previous_pii_detected' not in entry:
+                    entry['previous_pii_detected'] = entry.pop('previous_pii')
+                files_list.append(entry)
+                total_size += entry.get('size_bytes', 0)
 
-        # Call cloud API
+        # POST to Hub /api/v1/snapshots/save
         try:
             response = requests.post(
-                f"{cloud_url}/api/v1/snapshots",
+                f"{cloud_url}/api/v1/snapshots/save",
                 headers={"X-API-Key": api_key},
                 json={
                     "source_path_hash": source_hash,
                     "source_name": source_name,
-                    "fingerprints": fp_dict,
-                    "scores": scores
+                    "total_files": len(files_list),
+                    "total_size_bytes": total_size,
+                    "files": files_list,
                 },
                 timeout=30
             )
             response.raise_for_status()
-            logger.info(f"[V1.5] Snapshot saved: {source_name} ({len(fp_dict):,} files)")
+            logger.info(f"[V1.5] Snapshot saved: {source_name} ({len(files_list):,} files)")
             return True
         except Exception as e:
             logger.error(f"[V1.5] Failed to save snapshot: {e}")
@@ -163,7 +184,9 @@ def load_snapshot(source_path: str) -> Optional[Dict[str, Dict]]:
                 return None
 
             response.raise_for_status()
-            snapshot = response.json().get("fingerprints", {})
+            data = response.json()
+            files_list = data.get("files", [])
+            snapshot = {f["path_hash"]: f for f in files_list if "path_hash" in f}
 
             if snapshot:
                 logger.info(f"[V1.5] Snapshot loaded: {len(snapshot):,} files")
