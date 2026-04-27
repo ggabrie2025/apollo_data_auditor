@@ -1,5 +1,16 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch26] — 2026-04-28
+
+### Fixed
+- snapshot (--serve mode): inject `APOLLO_API_KEY` + `APOLLO_CLOUD_API_URL` into
+  subprocess env via `_make_subprocess_env()`. Without this, `main.py` subprocesses
+  never received Hub credentials → `save_snapshot()` failed silently → `audit_snapshots`
+  always empty. Completes snapshot reintroduction (patch25 fixed CLI mode, patch26
+  fixes `--serve` mode).
+
+---
+
 ## [1.7.R-patch25] — 2026-04-27
 
 ### Fixed

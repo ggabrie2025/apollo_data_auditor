@@ -195,6 +195,7 @@ def _silent_infra_scan():
         infra_data = scan_infrastructure(source_path=None)
         infra_payload = {
             "source_type": "infra",
+            "source_path": socket.gethostname(),
             "version": VERSION,
             "timestamp": datetime.now().isoformat(),
             "status": "success",
@@ -281,9 +282,11 @@ def _make_subprocess_env() -> dict:
     """
     env = os.environ.copy()
 
-    # Add AGENT-specific overrides (if needed)
-    # env['AGENT_ROOT'] = str(AGENT_ROOT)  # Optional: if agent needs to know its own root
-    # env['AGENT_MODE'] = AGENT_MODE
+    # Inject Hub credentials so subprocesses (main.py) can call save_snapshot()
+    active_key = _get_active_key()
+    if active_key:
+        env['APOLLO_API_KEY'] = active_key
+        env['APOLLO_CLOUD_API_URL'] = HUB_URL
 
     return env
 
