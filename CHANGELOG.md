@@ -1,5 +1,14 @@
 # CHANGELOG — Apollo Data Auditor
 
+## [1.7.R-patch28] — 2026-04-28
+
+### Added
+- UI: version patch complète affichée en pied de page et page de login.
+  `version.py`, `index.html` (titre + footer), `login.html` : `1.7.R` → `1.7.R-patchXX`.
+  Chaque binaire PyInstaller embarque l'UI — la version est lisible sans `--version`.
+
+---
+
 ## [1.7.R-patch27] — 2026-04-28
 
 ### Fixed
