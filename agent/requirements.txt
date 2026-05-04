@@ -1,30 +1,30 @@
 # Apollo Agent V1.6 - Dependencies
 
-PyYAML>=6.0
+PyYAML>=6.0.3
 
 # Async Database Drivers (Agent V1.4+)
-asyncpg>=0.29.0       # PostgreSQL
-aiomysql>=0.2.0       # MySQL
-motor>=3.3.2          # MongoDB
+asyncpg>=0.31.0       # PostgreSQL
+aiomysql>=0.3.2       # MySQL
+motor>=3.7.1          # MongoDB
 aioodbc>=0.5.0        # SQL Server (Sprint 30)
 
 # Directory Connectors (Sprint 87)
-ldap3>=2.9.0          # LDAP/AD connector
-pyasn1>=0.5.0         # ASN.1 (ldap3 dependency)
+ldap3>=2.9.1          # LDAP/AD connector
+pyasn1>=0.6.3         # ASN.1 (ldap3 dependency)
 
 # Cloud Connectors (Sprint 35)
-msal>=1.24.0          # Microsoft Graph OAuth
-aiohttp>=3.9.0        # Async HTTP client
+msal>=1.36.0          # Microsoft Graph OAuth
+aiohttp>=3.13.5        # Async HTTP client
 
 # Optimization (Sprint 37 - V1.6.1)
-pybloom_live>=3.0.0   # Bloom filter for O(1) dedup
+pybloom_live>=3.1.0   # Bloom filter for O(1) dedup
 
 # Cloud PII Content Extraction (Sprint 85)
-openpyxl>=3.1.0       # XLSX cell text extraction for cloud PII scan
+openpyxl>=3.1.5       # XLSX cell text extraction for cloud PII scan
 
 # UI Agent (server.py — panneau de scan local)
-python-dotenv>=1.0.0  # .env loading
-fastapi>=0.110.0      # Web framework
-uvicorn>=0.27.0       # ASGI server
-httpx>=0.27.0         # HTTP client (Hub communication)
-pydantic>=2.5.0       # Data validation (contracts)
+python-dotenv>=1.2.2  # .env loading
+fastapi>=0.136.1      # Web framework
+uvicorn>=0.46.0       # ASGI server
+httpx>=0.28.1         # HTTP client (Hub communication)
+pydantic>=2.13.3       # Data validation (contracts)
